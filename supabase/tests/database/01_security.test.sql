@@ -101,7 +101,7 @@ select is((select count(*)::int from public.published_results), 2, '6. after pub
 reset role;
 
 -- ===================================================== database-level integrity (RLS bypassed)
-select throws_ok($$insert into public.enrollments (school_id, student_id, class_id, session_id) values ('aaaaaaaa-0000-0000-0000-000000000001','aaaaaaaa-5000-0000-0000-000000000001','bbbbbbbb-7000-0000-0000-000000000001','aaaaaaaa-6000-0000-0000-000000000001')$$, '23503', null, 'composite FK blocks cross-school enrollment');
+select throws_ok($$insert into public.enrollments (school_id, student_id, class_id, session_id) values ('aaaaaaaa-0000-0000-0000-000000000001','aaaaaaaa-5000-0000-0000-000000000001','bbbbbbbb-7000-0000-0000-000000000001','bbbbbbbb-6000-0000-0000-000000000001')$$, '23503', null, 'composite FK blocks cross-school enrollment');
 select throws_ok($$insert into public.parent_students (school_id, parent_user_id, student_id) values ('bbbbbbbb-0000-0000-0000-000000000001','aaaaaaaa-4000-0000-0000-000000000001','bbbbbbbb-5000-0000-0000-000000000001')$$, '23514', null, 'cannot link a parent from another school');
 select throws_ok($$update public.audit_logs set action = 'tampered'$$, '42501', null, 'audit log is append-only');
 select throws_ok($$update public.result_sheets set status = 'draft' where id = 'aaaaaaaa-9000-0000-0000-000000000001'$$, '42501', null, 'status guard trigger blocks direct changes even for superuser');
