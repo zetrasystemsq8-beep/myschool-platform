@@ -1,0 +1,44 @@
+# Supabase CLI configuration for local development. Production settings live in the Supabase
+# dashboard (see docs/security.md "Production checklist").
+project_id = "myschool-platform"
+
+[api]
+enabled = true
+port = 54321
+# Only `public` is exposed. The `app` helper schema is deliberately NOT listed.
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# Accounts are provisioned by school admins via the provision-user Edge Function.
+enable_signup = false
+enable_anonymous_sign_ins = false
+minimum_password_length = 6
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+[functions.student-login]
+verify_jwt = false   # called before the student has a session; does its own validation
+
+[functions.provision-user]
+verify_jwt = true

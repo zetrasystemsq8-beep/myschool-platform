@@ -1,0 +1,15 @@
+# secrets
+.env
+.env.*
+!.env.example
+supabase/functions/.env
+supabase/.env
+*.pem
+# supabase cli
+supabase/.temp/
+supabase/.branches/
+# misc
+node_modules/
+*.zip
+.DS_Store
+*.log
