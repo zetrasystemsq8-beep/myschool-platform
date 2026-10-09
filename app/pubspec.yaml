@@ -1,0 +1,16 @@
+name: myschool_app
+description: MySchool mobile app
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.8.0
+  shared_preferences: ^2.3.0
+
+flutter:
+  uses-material-design: true

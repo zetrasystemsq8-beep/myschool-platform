@@ -1,0 +1,11 @@
+# Android/iOS scaffolding is generated in CI (flutter create), so it is not committed.
+android/
+ios/
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+test/
+analysis_options.yaml
