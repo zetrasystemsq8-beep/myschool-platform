@@ -1,4 +1,4 @@
-// POST /functions/v1/provision-user   (JWT required)
+// POST /functions/v1/myschool-provision-user   (JWT required)
 // Creates login accounts server-side. Clients can never create memberships themselves.
 //
 // action "create":
@@ -89,6 +89,9 @@ Deno.serve(async (req) => {
     return fail(dup ? 409 : 500, dup ? "already_exists" : "internal", dup ? "This account already exists." : "Could not create the account.");
   }
   const userId = created.user.id;
+  // No trigger exists on auth.users (shared project), so the profile row is created here.
+  const { error: pErr } = await admin.from("profiles").insert({ id: userId, full_name: fullName || null });
+  if (pErr) { await admin.auth.admin.deleteUser(userId); return fail(500, "internal", "Could not create the profile."); }
   let studentId: string | null = null;
 
   const rollback = async () => {                       // best-effort cleanup, order matters (FK restrict)

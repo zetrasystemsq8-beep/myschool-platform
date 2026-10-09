@@ -7,7 +7,7 @@ future web app / teacher & admin dashboards.
 | Layer | Tech |
 |---|---|
 | Database | PostgreSQL (Supabase) – normalized schema, composite FKs, RLS |
-| Auth | Supabase Auth (+ `student-login` Edge Function for admission-number/PIN login) |
+| Auth | Supabase Auth (+ `myschool-student-login` Edge Function for admission-number/PIN login) |
 | Server logic | SQL functions (workflow RPCs, search) + Edge Functions (account provisioning) |
 | Files | Supabase Storage (public logos, private photos/scans) |
 
@@ -15,7 +15,7 @@ future web app / teacher & admin dashboards.
 Written but **not yet executed**: the SQL migrations, pgTAP tests and Edge Functions were authored
 without access to a Postgres/Supabase runtime. Run `scripts/test.sh` (needs Docker) before relying on
 them and fix anything it reports. **AI/OCR scanning is not implemented**; only its database hooks
-(`script_scans`, `result_items.source/scan_id`, the `script-scans` bucket) exist.
+(`script_scans`, `result_items.source/scan_id`, the `myschool-script-scans` bucket) exist.
 
 ## Layout
 ```
@@ -25,12 +25,16 @@ supabase/
   migrations/         0001 types · 0002 tenancy · 0003 people+academics · 0004 results ·
                       0005 announcements+audit · 0006 helpers/triggers/RPCs · 0007 RLS ·
                       0008 grants · 0009 storage
-  functions/          student-login · provision-user · _shared
+  functions/          myschool-student-login · myschool-provision-user · _shared
   tests/database/     pgTAP security suite
   seed.sql            LOCAL demo data only
 scripts/test.sh       reset DB + run tests
 .env.example
 ```
+
+## Using an existing Supabase project
+All objects are in the `myschool` and `ms_private` schemas, so it can share a project with other apps. After running the migrations,
+add `myschool` to Settings → API → Exposed schemas. Flutter must call `supabase.schema('myschool')` (see docs/api.md).
 
 ## Quick start (desktop/CI with Docker)
 ```bash

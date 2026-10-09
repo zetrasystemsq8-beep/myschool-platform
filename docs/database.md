@@ -36,7 +36,7 @@ parents enables composite FKs.
   schools should be deactivated, not deleted (audit rows are append-only).
 
 ## Read model
-`public.published_results` (security_invoker view): one row per published item with session, term, class,
+`myschool.published_results` (security_invoker view): one row per published item with session, term, class,
 subject, scores, grade. RLS of the caller decides whose rows appear.
 
 ## Changing grading/limits

@@ -8,7 +8,8 @@ Flutter / Web ──HTTPS──► Supabase
                           │   └─ RPC: workflow, search       security-definer functions
                           ├─ Edge Functions                  account provisioning, student login
                           └─ Storage                         logos (public), photos/scans (private)
-Postgres schemas:  public (API surface)   app (private helpers, never exposed)   auth/storage (Supabase)
+Postgres schemas:  myschool (API surface)   ms_private (helpers, never exposed)   auth/storage (Supabase)
+(own schemas => safe to share a Supabase project with other apps; nothing in `public` is touched)
 ```
 The client talks to Postgres directly. Authorization is enforced **in the database** (RLS + constraints +
 security-definer functions); Edge Functions exist only for things that need the service role (creating auth
@@ -22,7 +23,7 @@ Shared database, shared schema, **`school_id` on every tenant row**:
    were bypassed.
 3. `school_id` is immutable (trigger).
 4. RLS: every policy calls a helper that checks an **active membership of `auth.uid()` in that exact
-   `school_id`** (`app.is_member / is_staff / is_school_admin / has_role`). Default is deny.
+   `school_id`** (`ms_private.is_member / is_staff / is_school_admin / has_role`). Default is deny.
 5. Users are global (`profiles`); roles are per school (`school_members`), so a parent with children in two
    schools has one login and two memberships. `platform_admin` is a flag on `profiles`, not a school role.
 
@@ -56,7 +57,7 @@ never published without human review and admin approval.
 
 ## Decisions & trade-offs
 - Student auth = Supabase Auth user with a hidden synthetic email + PIN as password, reached via
-  `student-login` (hides the convention, uniform errors). Alternative (custom JWT) rejected: more code, no gain.
+  `myschool-student-login` (hides the convention, uniform errors). Alternative (custom JWT) rejected: more code, no gain.
 - Lifecycle on the sheet, not per student: matches how schools actually submit/approve (per subject per class).
 - Student sensitive data split into `student_private` so teachers cannot read it.
 - Positions/averages, report-card comments, attendance, fees: out of scope for Part 1.

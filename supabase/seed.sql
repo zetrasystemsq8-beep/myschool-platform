@@ -33,18 +33,23 @@ insert into auth.identities (id, user_id, identity_data, provider, provider_id, 
 select gen_random_uuid(), id, jsonb_build_object('sub', id::text, 'email', email), 'email', id::text, now(), now(), now()
 from auth.users;
 
-update public.profiles set is_platform_admin = true where id = 'cccccccc-0000-0000-0000-000000000001';
+-- no trigger on auth.users in this design: profiles are created explicitly
+insert into myschool.profiles (id, full_name)
+select id, raw_user_meta_data ->> 'full_name' from auth.users
+where email like '%@myschool.test' or email like '%@students.myschool.local';
 
-insert into public.schools (id, school_code, name, motto, description, city, state) values
+update myschool.profiles set is_platform_admin = true where id = 'cccccccc-0000-0000-0000-000000000001';
+
+insert into myschool.schools (id, school_code, name, motto, description, city, state) values
  ('aaaaaaaa-0000-0000-0000-000000000001', 'DEMO-A', 'Demo School Alpha', 'Knowledge first', 'Demo tenant A', 'Ado-Ekiti', 'Ekiti'),
  ('bbbbbbbb-0000-0000-0000-000000000001', 'DEMO-B', 'Demo School Beta',  'Work and learn',  'Demo tenant B', 'Akure', 'Ondo');
 
-insert into public.school_settings (school_id) select id from public.schools;
-insert into public.grading_scales (school_id, grade, min_score, remark)
-select s.id, g.grade, g.min_score, g.remark from public.schools s,
+insert into myschool.school_settings (school_id) select id from myschool.schools;
+insert into myschool.grading_scales (school_id, grade, min_score, remark)
+select s.id, g.grade, g.min_score, g.remark from myschool.schools s,
  (values ('A',70,'Excellent'),('B',60,'Very Good'),('C',50,'Good'),('D',45,'Fair'),('E',40,'Pass'),('F',0,'Fail')) as g(grade, min_score, remark);
 
-insert into public.school_members (school_id, user_id, role, staff_number) values
+insert into myschool.school_members (school_id, user_id, role, staff_number) values
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-1000-0000-0000-000000000001', 'school_admin', 'A-ADM-1'),
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-2000-0000-0000-000000000001', 'teacher', 'A-T-1'),
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-3000-0000-0000-000000000001', 'student', null),
@@ -54,55 +59,55 @@ insert into public.school_members (school_id, user_id, role, staff_number) value
  ('bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-2000-0000-0000-000000000001', 'teacher', 'B-T-1'),
  ('bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-3000-0000-0000-000000000001', 'student', null);
 
-insert into public.students (id, school_id, user_id, admission_number, first_name, last_name) values
+insert into myschool.students (id, school_id, user_id, admission_number, first_name, last_name) values
  ('aaaaaaaa-5000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-3000-0000-0000-000000000001', 'ADM001', 'Ada', 'Student'),
  ('aaaaaaaa-5000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-3000-0000-0000-000000000002', 'ADM002', 'Bayo', 'Student'),
  ('bbbbbbbb-5000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-3000-0000-0000-000000000001', 'ADM001', 'Chika', 'Student');
 
-insert into public.student_private (student_id, school_id, date_of_birth, gender) values
+insert into myschool.student_private (student_id, school_id, date_of_birth, gender) values
  ('aaaaaaaa-5000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '2012-05-04', 'female');
 
-insert into public.parent_students (school_id, parent_user_id, student_id, relationship) values
+insert into myschool.parent_students (school_id, parent_user_id, student_id, relationship) values
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-4000-0000-0000-000000000001', 'aaaaaaaa-5000-0000-0000-000000000001', 'mother');
 
-insert into public.academic_sessions (id, school_id, name, start_date, end_date, is_current) values
+insert into myschool.academic_sessions (id, school_id, name, start_date, end_date, is_current) values
  ('aaaaaaaa-6000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '2025/2026', '2025-09-08', '2026-07-24', true),
  ('bbbbbbbb-6000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', '2025/2026', '2025-09-08', '2026-07-24', true);
-insert into public.terms (id, school_id, session_id, term_number, name, is_current) values
+insert into myschool.terms (id, school_id, session_id, term_number, name, is_current) values
  ('aaaaaaaa-6100-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-6000-0000-0000-000000000001', 1, 'First Term', true),
  ('bbbbbbbb-6100-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-6000-0000-0000-000000000001', 1, 'First Term', true);
-insert into public.classes (id, school_id, name, level) values
+insert into myschool.classes (id, school_id, name, level) values
  ('aaaaaaaa-7000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'JSS 1 A', 'JSS 1'),
  ('bbbbbbbb-7000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', 'JSS 1 A', 'JSS 1');
-insert into public.subjects (id, school_id, name, code) values
+insert into myschool.subjects (id, school_id, name, code) values
  ('aaaaaaaa-7100-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Mathematics', 'MTH'),
  ('aaaaaaaa-7100-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'English Language', 'ENG'),
  ('bbbbbbbb-7100-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', 'Mathematics', 'MTH');
 
-insert into public.teaching_assignments (school_id, teacher_user_id, class_id, subject_id, session_id) values
+insert into myschool.teaching_assignments (school_id, teacher_user_id, class_id, subject_id, session_id) values
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-2000-0000-0000-000000000001', 'aaaaaaaa-7000-0000-0000-000000000001', 'aaaaaaaa-7100-0000-0000-000000000001', 'aaaaaaaa-6000-0000-0000-000000000001'),
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-2000-0000-0000-000000000001', 'aaaaaaaa-7000-0000-0000-000000000001', 'aaaaaaaa-7100-0000-0000-000000000002', 'aaaaaaaa-6000-0000-0000-000000000001'),
  ('bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-2000-0000-0000-000000000001', 'bbbbbbbb-7000-0000-0000-000000000001', 'bbbbbbbb-7100-0000-0000-000000000001', 'bbbbbbbb-6000-0000-0000-000000000001');
 
-insert into public.enrollments (school_id, student_id, class_id, session_id) values
+insert into myschool.enrollments (school_id, student_id, class_id, session_id) values
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-5000-0000-0000-000000000001', 'aaaaaaaa-7000-0000-0000-000000000001', 'aaaaaaaa-6000-0000-0000-000000000001'),
  ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-5000-0000-0000-000000000002', 'aaaaaaaa-7000-0000-0000-000000000001', 'aaaaaaaa-6000-0000-0000-000000000001'),
  ('bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-5000-0000-0000-000000000001', 'bbbbbbbb-7000-0000-0000-000000000001', 'bbbbbbbb-6000-0000-0000-000000000001');
 
 -- Sheets: A-Maths already published, A-English still draft, B-Maths published
-insert into public.result_sheets (id, school_id, term_id, class_id, subject_id, status, published_at) values
+insert into myschool.result_sheets (id, school_id, term_id, class_id, subject_id, status, published_at) values
  ('aaaaaaaa-9000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-6100-0000-0000-000000000001', 'aaaaaaaa-7000-0000-0000-000000000001', 'aaaaaaaa-7100-0000-0000-000000000001', 'published', now()),
  ('aaaaaaaa-9000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-6100-0000-0000-000000000001', 'aaaaaaaa-7000-0000-0000-000000000001', 'aaaaaaaa-7100-0000-0000-000000000002', 'draft', null),
  ('bbbbbbbb-9000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-6100-0000-0000-000000000001', 'bbbbbbbb-7000-0000-0000-000000000001', 'bbbbbbbb-7100-0000-0000-000000000001', 'published', now());
 
-insert into public.result_items (id, school_id, sheet_id, student_id, ca_score, exam_score) values
+insert into myschool.result_items (id, school_id, sheet_id, student_id, ca_score, exam_score) values
  ('aaaaaaaa-9100-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-9000-0000-0000-000000000001', 'aaaaaaaa-5000-0000-0000-000000000001', 30, 45),
  ('aaaaaaaa-9100-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-9000-0000-0000-000000000001', 'aaaaaaaa-5000-0000-0000-000000000002', 20, 25),
  ('aaaaaaaa-9100-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-9000-0000-0000-000000000002', 'aaaaaaaa-5000-0000-0000-000000000001', 28, 40),
  ('aaaaaaaa-9100-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-9000-0000-0000-000000000002', 'aaaaaaaa-5000-0000-0000-000000000002', 15, 30),
  ('bbbbbbbb-9100-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-9000-0000-0000-000000000001', 'bbbbbbbb-5000-0000-0000-000000000001', 35, 50);
 
-insert into public.announcements (id, school_id, title, body, audience, status) values
+insert into myschool.announcements (id, school_id, title, body, audience, status) values
  ('aaaaaaaa-a000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Welcome back', 'Term begins Monday.', 'all', 'published'),
  ('aaaaaaaa-a000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Draft notice', 'Not ready.', 'all', 'draft'),
  ('aaaaaaaa-a000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Staff meeting', 'Friday 2pm.', 'staff', 'published'),

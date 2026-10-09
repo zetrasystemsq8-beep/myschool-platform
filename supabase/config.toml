@@ -5,8 +5,8 @@ project_id = "myschool-platform"
 [api]
 enabled = true
 port = 54321
-# Only `public` is exposed. The `app` helper schema is deliberately NOT listed.
-schemas = ["public"]
+# `myschool` holds the API surface. The `ms_private` helper schema is deliberately NOT listed.
+schemas = ["public", "myschool"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
@@ -28,8 +28,8 @@ site_url = "http://127.0.0.1:3000"
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
-# Accounts are provisioned by school admins via the provision-user Edge Function.
-enable_signup = false
+# Security does not depend on signups being off: a stray account has no membership => no access.
+enable_signup = true
 enable_anonymous_sign_ins = false
 minimum_password_length = 6
 
@@ -37,8 +37,8 @@ minimum_password_length = 6
 enable_signup = false
 enable_confirmations = false
 
-[functions.student-login]
+[functions.myschool-student-login]
 verify_jwt = false   # called before the student has a session; does its own validation
 
-[functions.provision-user]
+[functions.myschool-provision-user]
 verify_jwt = true

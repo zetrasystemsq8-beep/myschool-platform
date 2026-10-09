@@ -1,4 +1,4 @@
-// POST /functions/v1/student-login   (no JWT required)
+// POST /functions/v1/myschool-student-login   (no JWT required)
 // { "school_code": "CHR-ADO", "admission_number": "2024/017", "pin": "482913" }
 // -> { session: { access_token, refresh_token, expires_in, expires_at, token_type }, student: {...} }
 // Flutter then calls supabase.auth.setSession(refresh_token) and uses the normal Supabase client.
