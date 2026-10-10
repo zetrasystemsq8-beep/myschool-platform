@@ -177,6 +177,7 @@ class Announcement {
     required this.title,
     required this.body,
     required this.audience,
+    this.status = 'published',
     this.publishedAt,
   });
 
@@ -184,6 +185,7 @@ class Announcement {
   final String title;
   final String body;
   final String audience;
+  final String status; // draft | published | archived (admins see all)
   final DateTime? publishedAt;
 
   factory Announcement.fromMap(Map<String, dynamic> m) => Announcement(
@@ -191,6 +193,7 @@ class Announcement {
         title: m['title'] as String,
         body: m['body'] as String,
         audience: m['audience'] as String,
+        status: (m['status'] as String?) ?? 'published',
         publishedAt: DateTime.tryParse((m['published_at'] as String?) ?? '')?.toLocal(),
       );
 }
@@ -317,4 +320,81 @@ class Limits {
 
   final double caMax;
   final double examMax;
+}
+
+// ---------------------------------------------------------------- admin side
+
+/// One result sheet as shown in the administrator's review list.
+class SheetSummary {
+  const SheetSummary({
+    required this.id,
+    required this.status,
+    required this.className,
+    required this.subjectName,
+    required this.subjectCode,
+    required this.termName,
+    required this.sessionName,
+    this.returnNote,
+  });
+
+  final String id;
+  final String status;
+  final String className;
+  final String subjectName;
+  final String subjectCode;
+  final String termName;
+  final String sessionName;
+  final String? returnNote;
+
+  factory SheetSummary.fromMap(Map<String, dynamic> m) {
+    final term = (m['terms'] as Map?) ?? const {};
+    return SheetSummary(
+      id: m['id'] as String,
+      status: m['status'] as String,
+      className: ((m['classes'] as Map?)?['name'] as String?) ?? '',
+      subjectName: ((m['subjects'] as Map?)?['name'] as String?) ?? '',
+      subjectCode: ((m['subjects'] as Map?)?['code'] as String?) ?? '',
+      termName: (term['name'] as String?) ?? '',
+      sessionName: ((term['academic_sessions'] as Map?)?['name'] as String?) ?? '',
+      returnNote: m['return_note'] as String?,
+    );
+  }
+
+  String get statusLabel => switch (status) {
+        'draft' => 'Draft',
+        'submitted' => 'Submitted',
+        'approved' => 'Approved',
+        'published' => 'Published',
+        _ => status,
+      };
+}
+
+class ReviewItem {
+  const ReviewItem({
+    required this.name,
+    required this.admissionNumber,
+    this.ca,
+    this.exam,
+    this.total,
+    this.grade,
+  });
+
+  final String name;
+  final String admissionNumber;
+  final double? ca;
+  final double? exam;
+  final double? total;
+  final String? grade;
+
+  factory ReviewItem.fromMap(Map<String, dynamic> m) {
+    final s = (m['students'] as Map?) ?? const {};
+    return ReviewItem(
+      name: '${s['first_name'] ?? ''} ${s['last_name'] ?? ''}'.trim(),
+      admissionNumber: (s['admission_number'] as String?) ?? '',
+      ca: _num(m['ca_score']),
+      exam: _num(m['exam_score']),
+      total: _num(m['total']),
+      grade: m['grade'] as String?,
+    );
+  }
 }

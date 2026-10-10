@@ -6,6 +6,8 @@ import '../data/portal_repository.dart';
 import '../data/school.dart';
 import '../data/school_repository.dart';
 import '../widgets/state_views.dart';
+import 'admin_announcements_screen.dart';
+import 'admin_review_screen.dart';
 import 'announcements_screen.dart';
 import 'profile_screen.dart';
 import 'results_screen.dart';
@@ -87,6 +89,7 @@ class _PortalShellState extends State<PortalShell> {
     }
 
     final isTeacher = member.role == 'teacher';
+    final isAdmin = member.role == 'school_admin';
     final tabs = <({String title, String nav, IconData icon, IconData iconOn, Widget page})>[
       if (withResults)
         (
@@ -104,12 +107,22 @@ class _PortalShellState extends State<PortalShell> {
           iconOn: Icons.class_,
           page: TeacherHomeScreen(school: widget.school),
         ),
+      if (isAdmin)
+        (
+          title: 'Review results',
+          nav: 'Review',
+          icon: Icons.fact_check_outlined,
+          iconOn: Icons.fact_check,
+          page: AdminReviewScreen(school: widget.school),
+        ),
       (
         title: 'Announcements',
         nav: 'News',
         icon: Icons.campaign_outlined,
         iconOn: Icons.campaign,
-        page: AnnouncementsScreen(schoolId: widget.school.id),
+        page: isAdmin
+            ? AdminAnnouncementsScreen(schoolId: widget.school.id)
+            : AnnouncementsScreen(schoolId: widget.school.id),
       ),
       (
         title: withResults ? 'Profile' : 'Account',
