@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../data/auth_repository.dart';
 import '../data/school.dart';
 import '../data/school_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/school_avatar.dart';
+import 'login_screen.dart';
+import 'portal_shell.dart';
 import 'school_search_screen.dart';
 
-/// The school's own space. Slice 1 shows the public profile; sign-in comes next.
+/// The school's own space: public profile and the way into sign-in.
 class SchoolHomeScreen extends StatefulWidget {
   const SchoolHomeScreen({super.key, required this.school});
 
@@ -37,7 +40,31 @@ class _SchoolHomeScreenState extends State<SchoolHomeScreen> {
     }
   }
 
+  Future<void> _signIn() async {
+    final auth = AuthRepository.instance;
+    if (auth.hasSession) {
+      try {
+        final member = await auth.membershipFor(_school.id);
+        if (member != null && member.isActive && mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+                builder: (_) => PortalShell(school: _school, member: member)),
+            (_) => false,
+          );
+          return;
+        }
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LoginScreen(school: _school)),
+    );
+  }
+
   Future<void> _changeSchool() async {
+    try {
+      await AuthRepository.instance.signOut();
+    } catch (_) {}
     await SchoolRepository.instance.clearSavedSchool();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -75,11 +102,7 @@ class _SchoolHomeScreenState extends State<SchoolHomeScreen> {
                   ],
                   const SizedBox(height: 24),
                   FilledButton.icon(
-                    onPressed: () =>
-                        ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Sign-in arrives in the next update.')),
-                    ),
+                    onPressed: _signIn,
                     icon: const Icon(Icons.login),
                     label: const Text('Sign in'),
                   ),

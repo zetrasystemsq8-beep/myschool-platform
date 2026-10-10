@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../data/auth_repository.dart';
 import '../data/school_repository.dart';
 import '../theme/app_theme.dart';
+import 'portal_shell.dart';
 import 'school_home_screen.dart';
 import 'school_search_screen.dart';
 
@@ -27,12 +29,22 @@ class _SplashScreenState extends State<SplashScreen> {
     final elapsed = DateTime.now().difference(started);
     const minimum = Duration(milliseconds: 1100);
     if (elapsed < minimum) await Future<void>.delayed(minimum - elapsed);
+    Widget next = saved == null
+        ? const SchoolSearchScreen()
+        : SchoolHomeScreen(school: saved);
+    // Already signed in? Go straight into the portal.
+    if (saved != null && AuthRepository.instance.hasSession) {
+      try {
+        final member = await AuthRepository.instance.membershipFor(saved.id);
+        if (member != null && member.isActive) {
+          next = PortalShell(school: saved, member: member);
+        }
+      } catch (_) {
+        // Offline: fall back to the school page.
+      }
+    }
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => saved == null
-          ? const SchoolSearchScreen()
-          : SchoolHomeScreen(school: saved),
-    ));
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => next));
   }
 
   @override
