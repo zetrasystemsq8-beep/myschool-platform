@@ -194,3 +194,127 @@ class Announcement {
         publishedAt: DateTime.tryParse((m['published_at'] as String?) ?? '')?.toLocal(),
       );
 }
+
+// ---------------------------------------------------------------- teacher side
+
+/// "Teacher X teaches subject Y to class Z in session S".
+class Assignment {
+  const Assignment({
+    required this.id,
+    required this.classId,
+    required this.subjectId,
+    required this.sessionId,
+    required this.className,
+    required this.subjectName,
+    required this.subjectCode,
+    required this.sessionName,
+  });
+
+  final String id;
+  final String classId;
+  final String subjectId;
+  final String sessionId;
+  final String className;
+  final String subjectName;
+  final String subjectCode;
+  final String sessionName;
+
+  factory Assignment.fromMap(Map<String, dynamic> m) {
+    String pick(String rel, String key) =>
+        ((m[rel] as Map?)?[key] as String?) ?? '';
+    return Assignment(
+      id: m['id'] as String,
+      classId: m['class_id'] as String,
+      subjectId: m['subject_id'] as String,
+      sessionId: m['session_id'] as String,
+      className: pick('classes', 'name'),
+      subjectName: pick('subjects', 'name'),
+      subjectCode: pick('subjects', 'code'),
+      sessionName: pick('academic_sessions', 'name'),
+    );
+  }
+}
+
+class TermInfo {
+  const TermInfo({required this.id, required this.name, required this.number, required this.isCurrent});
+
+  final String id;
+  final String name;
+  final int number;
+  final bool isCurrent;
+
+  factory TermInfo.fromMap(Map<String, dynamic> m) => TermInfo(
+        id: m['id'] as String,
+        name: m['name'] as String,
+        number: (m['term_number'] as num).toInt(),
+        isCurrent: (m['is_current'] as bool?) ?? false,
+      );
+}
+
+/// Result sheet = one (term, class, subject). Moves draft -> submitted -> approved -> published.
+class SheetInfo {
+  const SheetInfo({required this.id, required this.status, this.returnNote});
+
+  final String id;
+  final String status;
+  final String? returnNote;
+
+  factory SheetInfo.fromMap(Map<String, dynamic> m) => SheetInfo(
+        id: m['id'] as String,
+        status: m['status'] as String,
+        returnNote: m['return_note'] as String?,
+      );
+
+  bool get isDraft => status == 'draft';
+
+  String get label => switch (status) {
+        'draft' => 'Draft',
+        'submitted' => 'Submitted',
+        'approved' => 'Approved',
+        'published' => 'Published',
+        _ => status,
+      };
+}
+
+class RosterEntry {
+  const RosterEntry({required this.studentId, required this.admissionNumber, required this.name});
+
+  final String studentId;
+  final String admissionNumber;
+  final String name;
+
+  static RosterEntry? fromMap(Map<String, dynamic> m) {
+    final s = m['students'];
+    if (s is! Map) return null;
+    return RosterEntry(
+      studentId: m['student_id'] as String,
+      admissionNumber: (s['admission_number'] as String?) ?? '',
+      name: '${s['first_name'] ?? ''} ${s['last_name'] ?? ''}'.trim(),
+    );
+  }
+}
+
+class ScoreItem {
+  const ScoreItem({required this.studentId, this.ca, this.exam, this.total, this.grade});
+
+  final String studentId;
+  final double? ca;
+  final double? exam;
+  final double? total;
+  final String? grade;
+
+  factory ScoreItem.fromMap(Map<String, dynamic> m) => ScoreItem(
+        studentId: m['student_id'] as String,
+        ca: _num(m['ca_score']),
+        exam: _num(m['exam_score']),
+        total: _num(m['total']),
+        grade: m['grade'] as String?,
+      );
+}
+
+class Limits {
+  const Limits(this.caMax, this.examMax);
+
+  final double caMax;
+  final double examMax;
+}

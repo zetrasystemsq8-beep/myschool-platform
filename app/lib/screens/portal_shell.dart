@@ -9,6 +9,7 @@ import '../widgets/state_views.dart';
 import 'announcements_screen.dart';
 import 'profile_screen.dart';
 import 'results_screen.dart';
+import 'teacher_home_screen.dart';
 
 /// Signed-in area with bottom navigation.
 /// Students/parents: Results, Announcements, Profile.  Staff: Announcements, Account
@@ -85,41 +86,48 @@ class _PortalShellState extends State<PortalShell> {
       );
     }
 
-    final pages = <Widget>[
+    final isTeacher = member.role == 'teacher';
+    final tabs = <({String title, String nav, IconData icon, IconData iconOn, Widget page})>[
       if (withResults)
-        ResultsScreen(key: ValueKey('r-${_current?.id}'), student: _current),
-      AnnouncementsScreen(schoolId: widget.school.id),
-      ProfileScreen(
-        key: ValueKey('p-${_current?.id}'),
-        school: widget.school,
-        member: member,
-        student: _current,
+        (
+          title: 'Results',
+          nav: 'Results',
+          icon: Icons.assignment_outlined,
+          iconOn: Icons.assignment,
+          page: ResultsScreen(key: ValueKey('r-${_current?.id}'), student: _current),
+        ),
+      if (isTeacher)
+        (
+          title: 'My classes',
+          nav: 'Classes',
+          icon: Icons.class_outlined,
+          iconOn: Icons.class_,
+          page: TeacherHomeScreen(school: widget.school),
+        ),
+      (
+        title: 'Announcements',
+        nav: 'News',
+        icon: Icons.campaign_outlined,
+        iconOn: Icons.campaign,
+        page: AnnouncementsScreen(schoolId: widget.school.id),
       ),
-    ];
-    final titles = [
-      if (withResults) 'Results',
-      'Announcements',
-      withResults ? 'Profile' : 'Account',
-    ];
-    final destinations = <NavigationDestination>[
-      if (withResults)
-        const NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment),
-            label: 'Results'),
-      const NavigationDestination(
-          icon: Icon(Icons.campaign_outlined),
-          selectedIcon: Icon(Icons.campaign),
-          label: 'News'),
-      NavigationDestination(
-          icon: const Icon(Icons.person_outline),
-          selectedIcon: const Icon(Icons.person),
-          label: withResults ? 'Profile' : 'Account'),
+      (
+        title: withResults ? 'Profile' : 'Account',
+        nav: withResults ? 'Profile' : 'Account',
+        icon: Icons.person_outline,
+        iconOn: Icons.person,
+        page: ProfileScreen(
+          key: ValueKey('p-${_current?.id}'),
+          school: widget.school,
+          member: member,
+          student: _current,
+        ),
+      ),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(titles[_tab]),
+        title: Text(tabs[_tab].title),
         actions: [
           if (member.isParent && _students.length > 1)
             PopupMenuButton<int>(
@@ -137,11 +145,14 @@ class _PortalShellState extends State<PortalShell> {
             ),
         ],
       ),
-      body: pages[_tab],
+      body: tabs[_tab].page,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: destinations,
+        destinations: [
+          for (final t in tabs)
+            NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.iconOn), label: t.nav),
+        ],
       ),
     );
   }

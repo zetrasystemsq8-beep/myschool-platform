@@ -152,8 +152,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: AppTheme.gold.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Text(
-                'Result entry and approval tools for staff arrive in the next updates.'),
+            child: Text(
+                widget.member.role == 'teacher'
+                ? 'Enter and submit results from the Classes tab.'
+                : 'Approval and school management tools arrive in the next update.'),
           ),
         ],
         const SizedBox(height: 24),

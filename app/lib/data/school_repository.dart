@@ -72,6 +72,10 @@ String friendlyError(Object error) {
       return 'The MySchool service is not switched on yet (the "myschool" '
           'schema is not exposed in Supabase).';
     }
+    if (const ['23514', '55000', '22023', 'P0002'].contains(error.code)) {
+      return error.message; // written for humans by the database rules
+    }
+    if (error.code == '42501') return 'You are not allowed to do that.';
     return 'Service error: ${error.message}';
   }
   final text = error.toString().toLowerCase();
