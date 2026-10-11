@@ -38,6 +38,8 @@ jobs:
           sed -i 's|android:label="[^"]*"|android:label="MySchool"|' $M
 
       - run: flutter pub get
+      - name: App icon
+        run: dart run flutter_launcher_icons
       - run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4

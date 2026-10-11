@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../data/app_settings.dart';
 import '../data/auth_repository.dart';
 import '../data/models.dart';
 import '../data/portal_repository.dart';
 import '../data/school.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_card.dart';
+import '../widgets/feedback.dart';
+import '../widgets/form_sheet.dart';
 import '../widgets/school_avatar.dart';
 import 'school_home_screen.dart';
 
@@ -50,6 +54,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (_) {
       // Profile details are optional; the page still works without them.
     }
+  }
+
+  Future<void> _changePassword() async {
+    final isStudent = widget.member.isStudent;
+    final label = isStudent ? 'PIN' : 'password';
+    final ok = await showFormSheet(
+      context,
+      title: 'Change $label',
+      submitLabel: 'Save new $label',
+      fields: [
+        FieldSpec('new', 'New $label', kind: FieldKind.password, required: true),
+        FieldSpec('again', 'Repeat new $label', kind: FieldKind.password, required: true),
+      ],
+      onSubmit: (v) async {
+        final value = v['new']!;
+        if (value != v['again']) throw FormError('The two entries do not match.');
+        if (isStudent && !RegExp(r'^[A-Za-z0-9]{6,32}$').hasMatch(value)) {
+          throw FormError('The PIN must be 6 to 32 letters or digits, with no spaces.');
+        }
+        if (!isStudent && value.length < 10) {
+          throw FormError('The password must be at least 10 characters.');
+        }
+        try {
+          await AuthRepository.instance.changePassword(value);
+        } catch (e) {
+          throw FormError(authError(e));
+        }
+      },
+    );
+    if (ok == true && mounted) notify(context, 'Your $label was changed.');
   }
 
   Future<void> _signOut() async {
@@ -143,6 +177,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ]),
             ]),
           ),
+        ),
+        const SizedBox(height: 16),
+        AppCard(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Appearance',
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: AppSettings.themeMode,
+              builder: (_, mode, __) => SegmentedButton<ThemeMode>(
+                segments: const [
+                  ButtonSegment(value: ThemeMode.system, label: Text('Auto')),
+                  ButtonSegment(value: ThemeMode.light, label: Text('Light')),
+                  ButtonSegment(value: ThemeMode.dark, label: Text('Dark')),
+                ],
+                selected: {mode},
+                onSelectionChanged: (s) => AppSettings.setThemeMode(s.first),
+              ),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: _changePassword,
+          icon: const Icon(Icons.key_outlined),
+          label: Text(widget.member.isStudent ? 'Change PIN' : 'Change password'),
         ),
         if (widget.member.isStaff) ...[
           const SizedBox(height: 16),

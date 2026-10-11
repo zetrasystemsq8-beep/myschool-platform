@@ -171,7 +171,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2.5))
                   : const Text('Sign in'),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
+            TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Forgot your sign-in?'),
+                  content: Text(_studentMode
+                      ? 'Ask your school to give you a new PIN. You can change it yourself afterwards from your Profile.'
+                      : 'Ask your school administrator to reset your password. You can change it yourself afterwards from your Profile.'),
+                  actions: [
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              ),
+              child: Text(_studentMode ? 'Forgot your PIN?' : 'Forgot your password?'),
+            ),
+            const SizedBox(height: 8),
             Text(
               _studentMode
                   ? 'Your admission number and PIN are given by your school.'

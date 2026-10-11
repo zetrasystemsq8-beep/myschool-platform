@@ -38,6 +38,31 @@ class PeopleScreen extends StatelessWidget {
   }
 }
 
+/// Admin sets a new password for a teacher or parent who forgot theirs.
+Future<void> _resetStaffPassword(BuildContext context, School school, MemberRow m) async {
+  final ok = await showFormSheet(
+    context,
+    title: 'Reset password',
+    subtitle: m.name,
+    submitLabel: 'Set new password',
+    fields: const [FieldSpec('pw', 'New password (at least 10 characters)', kind: FieldKind.password, required: true)],
+    onSubmit: (v) async {
+      if (v['pw']!.length < 10) throw FormError('The password must be at least 10 characters.');
+      try {
+        await SetupRepository.instance.provision({
+          'action': 'reset_password',
+          'school_id': school.id,
+          'user_id': m.userId,
+          'new_password': v['pw'],
+        });
+      } catch (e) {
+        throw FormError(provisionError(e));
+      }
+    },
+  );
+  if (ok == true && context.mounted) notify(context, 'Password updated. Share it with them privately.');
+}
+
 // ------------------------------------------------------------------ students
 
 class _StudentsTab extends StatelessWidget {
@@ -289,7 +314,10 @@ class _TeachersTab extends StatelessWidget {
                   style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
             ]),
           ),
-          Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+          PopupMenuButton<String>(
+            onSelected: (_) => _resetStaffPassword(ctx, school, t),
+            itemBuilder: (_) => const [PopupMenuItem(value: 'pw', child: Text('Reset password'))],
+          ),
         ]),
       ),
     );
@@ -354,7 +382,7 @@ class _ParentsTab extends StatelessWidget {
       emptyMessage: 'Add a parent and link them to their child.',
       addLabel: 'Add parent',
       onAdd: () => _add(context),
-      itemBuilder: (_, p, __) => AppCard(
+      itemBuilder: (ctx, p, __) => AppCard(
         child: Row(children: [
           CircleAvatar(
             backgroundColor: cs.primary,
@@ -364,6 +392,10 @@ class _ParentsTab extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: Text(p.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (_) => _resetStaffPassword(ctx, school, p),
+            itemBuilder: (_) => const [PopupMenuItem(value: 'pw', child: Text('Reset password'))],
           ),
         ]),
       ),

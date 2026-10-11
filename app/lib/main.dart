@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
+import 'data/app_settings.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -17,6 +18,7 @@ void main() {
       url: AppConfig.supabaseUrl,
       anonKey: AppConfig.supabaseAnonKey,
     );
+    await AppSettings.load();
     runApp(const MySchoolApp());
   }, (error, stack) => debugPrint('Unhandled error: $error'));
 }
@@ -26,13 +28,16 @@ class MySchoolApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MySchool',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
-      home: const SplashScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppSettings.themeMode,
+      builder: (_, mode, __) => MaterialApp(
+        title: 'MySchool',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: mode,
+        home: const SplashScreen(),
+      ),
     );
   }
 }

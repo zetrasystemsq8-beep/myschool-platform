@@ -54,6 +54,10 @@ class AuthRepository {
     return Member.fromMap(rows.first);
   }
 
+  Future<void> changePassword(String newPassword) async {
+    await _client.auth.updateUser(UserAttributes(password: newPassword));
+  }
+
   Future<void> signOut() => _client.auth.signOut();
 }
 
