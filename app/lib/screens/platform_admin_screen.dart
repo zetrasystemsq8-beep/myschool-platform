@@ -181,6 +181,7 @@ class _PlatformAdminScreenState extends State<PlatformAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_checking && !_isAdmin) return _loginScaffold();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Platform administrator'),
@@ -189,61 +190,103 @@ class _PlatformAdminScreenState extends State<PlatformAdminScreen> {
             IconButton(tooltip: 'Sign out', icon: const Icon(Icons.logout), onPressed: _signOut),
         ],
       ),
-      body: _checking ? const LoadingView() : (_isAdmin ? _schools() : _login()),
+      body: _checking ? const LoadingView() : _schools(),
     );
   }
 
-  Widget _login() {
+  Widget _loginScaffold() {
     final cs = Theme.of(context).colorScheme;
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Icon(Icons.admin_panel_settings_outlined, size: 56, color: cs.primary),
-        const SizedBox(height: 12),
-        Text('Sign in',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Text('Only for the MySchool team.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
-        const SizedBox(height: 24),
-        TextField(
-          controller: _email,
-          keyboardType: TextInputType.emailAddress,
-          autocorrect: false,
-          decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _password,
-          obscureText: _hide,
-          onSubmitted: (_) => _signIn(),
-          decoration: InputDecoration(
-            labelText: 'Password',
-            prefixIcon: const Icon(Icons.lock_outline),
-            suffixIcon: IconButton(
-              icon: Icon(_hide ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-              onPressed: () => setState(() => _hide = !_hide),
+    final theme = Theme.of(context);
+    final top = MediaQuery.of(context).padding.top;
+    return Scaffold(
+      body: Column(children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(8, top + 4, 8, 28),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppTheme.green, AppTheme.greenLight],
             ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+          ),
+          child: Column(children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.maybePop(context),
+              ),
+            ),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppTheme.gold, width: 2),
+              ),
+              child: const Icon(Icons.admin_panel_settings_outlined, color: AppTheme.gold, size: 36),
+            ),
+            const SizedBox(height: 14),
+            const Text('Platform administrator',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text('MySchool team only',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.85))),
+          ]),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            children: [
+              TextField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                decoration: const InputDecoration(
+                    labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _password,
+                obscureText: _hide,
+                onSubmitted: (_) => _signIn(),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(_hide ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                    onPressed: () => setState(() => _hide = !_hide),
+                  ),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                      color: cs.errorContainer, borderRadius: BorderRadius.circular(12)),
+                  child: Text(_error!, style: TextStyle(color: cs.onErrorContainer)),
+                ),
+              ],
+              const SizedBox(height: 22),
+              FilledButton(
+                onPressed: _signingIn ? null : _signIn,
+                child: _signingIn
+                    ? const SizedBox(
+                        width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
+                    : const Text('Sign in'),
+              ),
+              const SizedBox(height: 16),
+              Text('Create schools, switch them on or off and add each school\'s first administrator.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            ],
           ),
         ),
-        if (_error != null) ...[
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: cs.errorContainer, borderRadius: BorderRadius.circular(12)),
-            child: Text(_error!, style: TextStyle(color: cs.onErrorContainer)),
-          ),
-        ],
-        const SizedBox(height: 22),
-        FilledButton(
-          onPressed: _signingIn ? null : _signIn,
-          child: _signingIn
-              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-              : const Text('Sign in'),
-        ),
-      ],
+      ]),
     );
   }
 

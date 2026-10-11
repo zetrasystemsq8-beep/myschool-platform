@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/auth_repository.dart';
 import '../data/school.dart';
+import '../theme/app_theme.dart';
 import '../widgets/school_avatar.dart';
 import 'portal_shell.dart';
 
@@ -82,127 +83,148 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final top = MediaQuery.of(context).padding.top;
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          children: [
-            Center(child: SchoolAvatar(school: widget.school, size: 72)),
-            const SizedBox(height: 14),
-            Text(widget.school.name,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+      body: Column(children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(8, top + 4, 8, 24),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppTheme.green, AppTheme.greenLight],
+            ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+          ),
+          child: Column(children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.maybePop(context),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: SchoolAvatar(school: widget.school, size: 64),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(widget.school.name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 21, fontWeight: FontWeight.bold)),
+            ),
             const SizedBox(height: 4),
             Text('Sign in to continue',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: cs.onSurfaceVariant)),
-            const SizedBox(height: 24),
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: true, label: Text('Student'), icon: Icon(Icons.badge_outlined)),
-                ButtonSegment(value: false, label: Text('Parent / Staff'), icon: Icon(Icons.person_outline)),
-              ],
-              selected: {_studentMode},
-              onSelectionChanged: (s) => setState(() {
-                _studentMode = s.first;
-                _idCtl.clear();
-                _secretCtl.clear();
-                _error = null;
-              }),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _idCtl,
-              keyboardType: _studentMode
-                  ? TextInputType.text
-                  : TextInputType.emailAddress,
-              textCapitalization: _studentMode
-                  ? TextCapitalization.characters
-                  : TextCapitalization.none,
-              autocorrect: false,
-              decoration: InputDecoration(
-                labelText: _studentMode ? 'Admission number' : 'Email',
-                prefixIcon: Icon(_studentMode ? Icons.badge_outlined : Icons.email_outlined),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.85))),
+          ]),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            children: [
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(value: true, label: Text('Student'), icon: Icon(Icons.badge_outlined)),
+                  ButtonSegment(value: false, label: Text('Parent / Staff'), icon: Icon(Icons.person_outline)),
+                ],
+                selected: {_studentMode},
+                onSelectionChanged: (s) => setState(() {
+                  _studentMode = s.first;
+                  _idCtl.clear();
+                  _secretCtl.clear();
+                  _error = null;
+                }),
               ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _secretCtl,
-              obscureText: _hide,
-              autocorrect: false,
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                labelText: _studentMode ? 'PIN' : 'Password',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(_hide ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                  onPressed: () => setState(() => _hide = !_hide),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _idCtl,
+                keyboardType: _studentMode ? TextInputType.text : TextInputType.emailAddress,
+                textCapitalization:
+                    _studentMode ? TextCapitalization.characters : TextCapitalization.none,
+                autocorrect: false,
+                decoration: InputDecoration(
+                  labelText: _studentMode ? 'Admission number' : 'Email',
+                  prefixIcon: Icon(_studentMode ? Icons.badge_outlined : Icons.email_outlined),
                 ),
               ),
-            ),
-            if (_error != null) ...[
               const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: cs.errorContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(children: [
-                  Icon(Icons.error_outline, color: cs.onErrorContainer, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(_error!,
-                        style: TextStyle(color: cs.onErrorContainer)),
+              TextField(
+                controller: _secretCtl,
+                obscureText: _hide,
+                autocorrect: false,
+                onSubmitted: (_) => _submit(),
+                decoration: InputDecoration(
+                  labelText: _studentMode ? 'PIN' : 'Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(_hide ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                    onPressed: () => setState(() => _hide = !_hide),
                   ),
-                ]),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: cs.errorContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(children: [
+                    Icon(Icons.error_outline, color: cs.onErrorContainer, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(_error!, style: TextStyle(color: cs.onErrorContainer))),
+                  ]),
+                ),
+              ],
+              const SizedBox(height: 22),
+              FilledButton(
+                onPressed: _loading ? null : _submit,
+                child: _loading
+                    ? const SizedBox(
+                        width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
+                    : const Text('Sign in'),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Forgot your sign-in?'),
+                    content: Text(_studentMode
+                        ? 'Ask your school to give you a new PIN. You can change it yourself afterwards from your Profile.'
+                        : 'Ask your school administrator to reset your password. You can change it yourself afterwards from your Profile.'),
+                    actions: [
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                ),
+                child: Text(_studentMode ? 'Forgot your PIN?' : 'Forgot your password?'),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _studentMode
+                    ? 'Your admission number and PIN are given by your school.'
+                    : 'Use the email and password your school created for you.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
-            const SizedBox(height: 22),
-            FilledButton(
-              onPressed: _loading ? null : _submit,
-              child: _loading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2.5))
-                  : const Text('Sign in'),
-            ),
-            const SizedBox(height: 4),
-            TextButton(
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Forgot your sign-in?'),
-                  content: Text(_studentMode
-                      ? 'Ask your school to give you a new PIN. You can change it yourself afterwards from your Profile.'
-                      : 'Ask your school administrator to reset your password. You can change it yourself afterwards from your Profile.'),
-                  actions: [
-                    FilledButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-              ),
-              child: Text(_studentMode ? 'Forgot your PIN?' : 'Forgot your password?'),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _studentMode
-                  ? 'Your admission number and PIN are given by your school.'
-                  : 'Use the email and password your school created for you.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
+          ),
         ),
-      ),
+      ]),
     );
   }
 }
