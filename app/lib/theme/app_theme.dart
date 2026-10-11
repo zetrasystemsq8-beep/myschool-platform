@@ -19,6 +19,27 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
+      appBarTheme: AppBarTheme(
+        centerTitle: false,
+        scrolledUnderElevation: 0,
+        backgroundColor: scheme.surface,
+        titleTextStyle: TextStyle(
+          color: scheme.onSurface,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      navigationBarTheme: NavigationBarThemeData(
+        indicatorColor: gold.withValues(alpha: 0.30),
+        labelTextStyle: WidgetStateProperty.all(
+          const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),

@@ -7,6 +7,7 @@ import '../data/school_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/school_card.dart';
 import '../widgets/state_views.dart';
+import 'platform_admin_screen.dart';
 import 'school_home_screen.dart';
 
 class SchoolSearchScreen extends StatefulWidget {
@@ -167,6 +168,14 @@ class _SchoolSearchScreenState extends State<SchoolSearchScreen> {
               ),
             ),
             Expanded(child: _body()),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PlatformAdminScreen()),
+                ),
+                child: const Text('MySchool team sign-in'),
+              ),
+            ),
           ],
         ),
       ),

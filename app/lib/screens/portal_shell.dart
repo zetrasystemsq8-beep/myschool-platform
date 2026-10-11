@@ -11,6 +11,7 @@ import 'admin_review_screen.dart';
 import 'announcements_screen.dart';
 import 'profile_screen.dart';
 import 'results_screen.dart';
+import 'setup_hub_screen.dart';
 import 'teacher_home_screen.dart';
 
 /// Signed-in area with bottom navigation.
@@ -115,6 +116,14 @@ class _PortalShellState extends State<PortalShell> {
           iconOn: Icons.fact_check,
           page: AdminReviewScreen(school: widget.school),
         ),
+      if (isAdmin)
+        (
+          title: 'Set up school',
+          nav: 'Setup',
+          icon: Icons.settings_outlined,
+          iconOn: Icons.settings,
+          page: SetupHubScreen(school: widget.school),
+        ),
       (
         title: 'Announcements',
         nav: 'News',
@@ -138,7 +147,12 @@ class _PortalShellState extends State<PortalShell> {
       ),
     ];
 
-    return Scaffold(
+    return PopScope(
+      canPop: _tab == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _tab = 0);
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(tabs[_tab].title),
         actions: [
@@ -158,7 +172,7 @@ class _PortalShellState extends State<PortalShell> {
             ),
         ],
       ),
-      body: tabs[_tab].page,
+      body: IndexedStack(index: _tab, children: [for (final t in tabs) t.page]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
@@ -167,6 +181,6 @@ class _PortalShellState extends State<PortalShell> {
             NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.iconOn), label: t.nav),
         ],
       ),
-    );
+    ));
   }
 }

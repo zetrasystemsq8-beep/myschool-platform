@@ -155,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Text(
                 widget.member.role == 'teacher'
                 ? 'Enter and submit results from the Classes tab.'
-                : 'Approve and publish results from the Review tab.'),
+                : 'Approve results in Review, and manage the school in Setup.'),
           ),
         ],
         const SizedBox(height: 24),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +21,7 @@ class SchoolRepository {
     final rows = await _db.rpc('search_schools', params: {
       'q': query,
       'max_results': 20,
-    });
+    }).timeout(const Duration(seconds: 20));
     return (rows as List)
         .map((e) => School.fromMap(Map<String, dynamic>.from(e as Map)))
         .toList();
@@ -29,7 +30,7 @@ class SchoolRepository {
   Future<School?> byCode(String code) async {
     final rows = await _db.rpc('get_public_school', params: {
       'p_school_code': code,
-    });
+    }).timeout(const Duration(seconds: 20));
     final list = rows as List;
     if (list.isEmpty) return null;
     return School.fromMap(Map<String, dynamic>.from(list.first as Map));
@@ -72,6 +73,8 @@ String friendlyError(Object error) {
       return 'The MySchool service is not switched on yet (the "myschool" '
           'schema is not exposed in Supabase).';
     }
+    if (error.code == '23505') return 'That already exists.';
+    if (error.code == '23503') return 'That is linked to other records, so the change was not allowed.';
     if (const ['23514', '55000', '22023', 'P0002'].contains(error.code)) {
       return error.message; // written for humans by the database rules
     }
@@ -81,6 +84,9 @@ String friendlyError(Object error) {
           : 'You are not allowed to do that.';
     }
     return 'Service error: ${error.message}';
+  }
+  if (error is TimeoutException) {
+    return 'The request took too long. Check your connection and try again.';
   }
   final text = error.toString().toLowerCase();
   if (text.contains('socketexception') || text.contains('failed host lookup')) {
