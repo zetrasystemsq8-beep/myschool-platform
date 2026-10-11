@@ -9,7 +9,7 @@ class PortalRepository {
   PortalRepository._();
   static final instance = PortalRepository._();
 
-  PostgrestClient get _db => Supabase.instance.client.schema(AppConfig.schema);
+  late final _db = Supabase.instance.client.schema(AppConfig.schema);
 
   Future<StudentInfo?> myStudentRecord(String uid, String schoolId) async {
     final row = await _db

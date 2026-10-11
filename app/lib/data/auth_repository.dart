@@ -9,7 +9,7 @@ class AuthRepository {
   static final instance = AuthRepository._();
 
   SupabaseClient get _client => Supabase.instance.client;
-  PostgrestClient get _db => _client.schema(AppConfig.schema);
+  late final _db = _client.schema(AppConfig.schema);
 
   bool get hasSession => _client.auth.currentSession != null;
   String? get userId => _client.auth.currentUser?.id;

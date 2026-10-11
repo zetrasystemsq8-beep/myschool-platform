@@ -116,7 +116,7 @@ class SetupRepository {
   static final instance = SetupRepository._();
 
   SupabaseClient get _client => Supabase.instance.client;
-  PostgrestClient get _db => _client.schema(AppConfig.schema);
+  late final _db = _client.schema(AppConfig.schema);
 
   // ------------------------------------------------------------ platform admin
 

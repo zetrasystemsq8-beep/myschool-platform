@@ -9,7 +9,7 @@ class TeacherRepository {
   TeacherRepository._();
   static final instance = TeacherRepository._();
 
-  PostgrestClient get _db => Supabase.instance.client.schema(AppConfig.schema);
+  late final _db = Supabase.instance.client.schema(AppConfig.schema);
 
   Future<List<Assignment>> assignments(String uid, String schoolId) async {
     final rows = await _db

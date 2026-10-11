@@ -9,7 +9,7 @@ class AdminRepository {
   AdminRepository._();
   static final instance = AdminRepository._();
 
-  PostgrestClient get _db => Supabase.instance.client.schema(AppConfig.schema);
+  late final _db = Supabase.instance.client.schema(AppConfig.schema);
 
   static const _sheetCols =
       'id, status, return_note, classes(name), subjects(name, code), terms(name, term_number, academic_sessions(name))';

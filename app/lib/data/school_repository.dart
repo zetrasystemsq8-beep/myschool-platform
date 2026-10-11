@@ -15,7 +15,7 @@ class SchoolRepository {
   static const _savedKey = 'selected_school';
 
   SupabaseClient get _client => Supabase.instance.client;
-  PostgrestClient get _db => _client.schema(AppConfig.schema);
+  late final _db = _client.schema(AppConfig.schema);
 
   Future<List<School>> search(String query) async {
     final rows = await _db.rpc('search_schools', params: {
