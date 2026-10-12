@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/app_card.dart';
+
 import '../data/admin_repository.dart';
 import '../data/models.dart';
 import '../data/school.dart';
@@ -19,9 +21,9 @@ class AdminReviewScreen extends StatefulWidget {
 
 class _AdminReviewScreenState extends State<AdminReviewScreen> {
   static const _filters = [
-    ('submitted', 'To review'),
+    ('submitted', 'Waiting'),
     ('approved', 'Approved'),
-    ('published', 'Published'),
+    ('published', 'Shared'),
   ];
 
   String _status = 'submitted';
@@ -77,7 +79,7 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
           MessageView(
             icon: Icons.inbox_outlined,
             title: 'Nothing here',
-            message: 'Sheets at this stage will appear here.',
+            message: 'When teachers send results for approval, they appear under "Waiting".',
           ),
         ]),
       );
@@ -92,12 +94,8 @@ class _AdminReviewScreenState extends State<AdminReviewScreen> {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (_, i) {
           final s = _items[i];
-          return Card(
-            elevation: 0,
-            margin: EdgeInsets.zero,
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: InkWell(
+          return CardShell(
+      child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () => _open(s),
               child: Padding(

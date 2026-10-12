@@ -271,10 +271,10 @@ class SheetInfo {
   bool get isDraft => status == 'draft';
 
   String get label => switch (status) {
-        'draft' => 'Draft',
-        'submitted' => 'Submitted',
+        'draft' => 'Not sent yet',
+        'submitted' => 'Waiting for approval',
         'approved' => 'Approved',
-        'published' => 'Published',
+        'published' => 'Shared',
         _ => status,
       };
 }
@@ -361,10 +361,10 @@ class SheetSummary {
   }
 
   String get statusLabel => switch (status) {
-        'draft' => 'Draft',
-        'submitted' => 'Submitted',
+        'draft' => 'Not sent yet',
+        'submitted' => 'Waiting for approval',
         'approved' => 'Approved',
-        'published' => 'Published',
+        'published' => 'Shared',
         _ => status,
       };
 }

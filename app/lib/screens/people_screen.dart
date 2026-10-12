@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/help.dart';
+
 import '../data/school.dart';
 import '../data/school_repository.dart';
 import '../data/setup_repository.dart';
@@ -26,6 +28,17 @@ class PeopleScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('People'),
+          actions: const [
+            HelpButton(
+              title: 'People',
+              steps: [
+                'Students: tap "Add student". They sign in with their admission number and the PIN you set.',
+                'Teachers: tap "Add teacher", then tap the teacher to choose the classes and subjects they teach.',
+                'Parents: tap "Add parent" and choose their child. They sign in with their email.',
+                'Someone forgot their PIN or password? Tap their name (students) or the ⋮ menu (others) to set a new one.',
+              ],
+            ),
+          ],
           bottom: const TabBar(tabs: [Tab(text: 'Students'), Tab(text: 'Teachers'), Tab(text: 'Parents')]),
         ),
         body: TabBarView(children: [
@@ -88,7 +101,7 @@ class _StudentsTab extends StatelessWidget {
           const FieldSpec('pin', 'PIN (6-32 letters or digits)', kind: FieldKind.password, required: true),
           FieldSpec('class', 'Class (optional)',
               kind: FieldKind.choice, options: [for (final c in classes) (c.id, c.name)]),
-          FieldSpec('session', 'Session (default: current)',
+          FieldSpec('session', 'School year (default: current)',
               kind: FieldKind.choice, options: [for (final s in sessions) (s.id, s.name)]),
         ],
         onSubmit: (v) async {
@@ -100,7 +113,7 @@ class _StudentsTab extends StatelessWidget {
           if (classId.isNotEmpty && session.isEmpty) {
             session = await repo.currentSessionId(school.id) ?? '';
             if (session.isEmpty) {
-              throw FormError('There is no current session. Choose a session or create one first.');
+              throw FormError('There is no current school year. Choose one, or add a school year first.');
             }
           }
           try {
@@ -136,18 +149,18 @@ class _StudentsTab extends StatelessWidget {
       if (!context.mounted) return;
       final saved = await showFormSheet(
         context,
-        title: 'Enroll ${s.name}',
-        submitLabel: 'Enroll',
+        title: 'Put ${s.name} in a class',
+        submitLabel: 'Save',
         fields: [
           FieldSpec('class', 'Class', kind: FieldKind.choice, required: true, options: [for (final c in classes) (c.id, c.name)]),
-          FieldSpec('session', 'Session', kind: FieldKind.choice, required: true, options: [for (final x in sessions) (x.id, x.name)]),
+          FieldSpec('session', 'School year', kind: FieldKind.choice, required: true, options: [for (final x in sessions) (x.id, x.name)]),
         ],
         onSubmit: (v) async {
           try {
             await repo.enroll(school.id, s.id, v['class']!, v['session']!);
           } catch (e) {
             throw FormError(e.toString().contains('23505')
-                ? 'This student is already enrolled in a class for that session.'
+                ? 'This student already has a class for that school year.'
                 : friendlyError(e));
           }
         },
@@ -200,7 +213,7 @@ class _StudentsTab extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.how_to_reg_outlined),
-            title: const Text('Enroll in a class'),
+            title: const Text('Put in a class'),
             onTap: () => Navigator.pop(ctx, 'enroll'),
           ),
           if (s.userId != null)
@@ -226,7 +239,7 @@ class _StudentsTab extends StatelessWidget {
       load: () => SetupRepository.instance.students(school.id),
       emptyIcon: Icons.school_outlined,
       emptyTitle: 'No students yet',
-      emptyMessage: 'Add the first student. Create sessions, terms and classes first for a smooth start.',
+      emptyMessage: 'Add your students here. It is easier if you have already added the school year and classes.',
       addLabel: 'Add student',
       onAdd: () => _add(context),
       itemBuilder: (ctx, s, reload) => AppCard(
@@ -293,7 +306,7 @@ class _TeachersTab extends StatelessWidget {
       load: () => SetupRepository.instance.members(school.id, 'teacher'),
       emptyIcon: Icons.person_outline,
       emptyTitle: 'No teachers yet',
-      emptyMessage: 'Add a teacher, then assign classes and subjects to them.',
+      emptyMessage: 'Add a teacher, then choose which classes and subjects they teach.',
       addLabel: 'Add teacher',
       onAdd: () => _add(context),
       itemBuilder: (ctx, t, reload) => AppCard(
@@ -310,7 +323,7 @@ class _TeachersTab extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(t.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-              Text('Tap to assign classes and subjects',
+              Text('Tap to choose what they teach',
                   style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
             ]),
           ),

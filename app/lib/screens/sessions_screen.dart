@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/help.dart';
+
 import '../data/school.dart';
 import '../data/school_repository.dart';
 import '../data/setup_repository.dart';
@@ -17,14 +19,14 @@ class SessionsScreen extends StatelessWidget {
   Future<bool?> _addSession(BuildContext context) {
     return showFormSheet(
       context,
-      title: 'New session',
-      subtitle: 'An academic year, e.g. 2025/2026.',
-      submitLabel: 'Create session',
+      title: 'New school year',
+      subtitle: 'For example 2025/2026.',
+      submitLabel: 'Save school year',
       fields: const [
-        FieldSpec('name', 'Session name', required: true, hint: '2025/2026'),
+        FieldSpec('name', 'School year', required: true, hint: '2025/2026'),
         FieldSpec('start', 'Start date', kind: FieldKind.date, required: true),
         FieldSpec('end', 'End date', kind: FieldKind.date, required: true),
-        FieldSpec('current', 'Make this the current session', kind: FieldKind.toggle),
+        FieldSpec('current', 'This is the current school year', kind: FieldKind.toggle),
       ],
       onSubmit: (v) async {
         if (v['end']!.compareTo(v['start']!) <= 0) {
@@ -43,13 +45,26 @@ class SessionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sessions & terms')),
+      appBar: AppBar(
+        title: const Text('School years & terms'),
+        actions: const [
+          HelpButton(
+            title: 'School years & terms',
+            intro: 'Results are saved per term, so the school needs a year and its terms first.',
+            steps: [
+              'Tap "New school year" and enter the year, for example 2025/2026, with its start and end dates.',
+              'Tap the ⋮ menu on the year and choose "Add a term". Add First, Second and Third term.',
+              'Mark the year and the term you are in as "current".',
+            ],
+          ),
+        ],
+      ),
       body: AsyncList<SessionInfo>(
         load: () => SetupRepository.instance.sessions(school.id),
         emptyIcon: Icons.event_note_outlined,
-        emptyTitle: 'No sessions yet',
-        emptyMessage: 'Create the first academic session, then add its terms.',
-        addLabel: 'New session',
+        emptyTitle: 'No school year yet',
+        emptyMessage: 'Start by adding the current school year, for example 2025/2026. Then add its terms.',
+        addLabel: 'New school year',
         onAdd: () => _addSession(context),
         itemBuilder: (ctx, s, reload) => _SessionCard(school: school, session: s, reload: reload),
       ),
@@ -124,7 +139,7 @@ class _SessionCard extends StatelessWidget {
             onSelected: (v) => v == 'term' ? _addTerm(context) : _makeCurrent(context),
             itemBuilder: (_) => [
               const PopupMenuItem(value: 'term', child: Text('Add a term')),
-              if (!session.isCurrent) const PopupMenuItem(value: 'current', child: Text('Make current')),
+              if (!session.isCurrent) const PopupMenuItem(value: 'current', child: Text('Set as current year')),
             ],
           ),
         ]),
@@ -132,7 +147,7 @@ class _SessionCard extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
         const SizedBox(height: 10),
         if (session.terms.isEmpty)
-          Text('No terms yet. Use the menu to add one.',
+          Text('No terms yet. Tap the ⋮ menu to add one.',
               style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
         for (final t in session.terms)
           Padding(
@@ -146,7 +161,7 @@ class _SessionCard extends StatelessWidget {
               else
                 TextButton(
                   onPressed: () => _makeCurrent(context, termId: t.id),
-                  child: const Text('Make current'),
+                  child: const Text('Set as current'),
                 ),
             ]),
           ),

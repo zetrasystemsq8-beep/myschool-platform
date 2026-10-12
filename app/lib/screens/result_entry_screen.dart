@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/help.dart';
+
+import '../widgets/app_card.dart';
+
 import '../data/auth_repository.dart';
 import '../data/models.dart';
 import '../data/school.dart';
@@ -176,15 +180,15 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Submit for approval?'),
+        title: const Text('Send for approval?'),
         content: const Text(
-            'After submitting you cannot edit these scores unless the administrator returns the sheet to you.'),
+            'After sending, you cannot change these scores unless the administrator sends them back to you.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
-            child: const Text('Submit'),
+            child: const Text('Send'),
           ),
         ],
       ),
@@ -201,7 +205,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
         _sheet = fresh ?? _sheet;
         _busy = false;
       });
-      _toast('Submitted for approval.');
+      _toast('Sent for approval.');
     } catch (e) {
       if (mounted) setState(() => _busy = false);
       _toast(friendlyError(e));
@@ -216,6 +220,17 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${a.subjectName} · ${a.className}'),
+        actions: const [
+          HelpButton(
+            title: 'Entering results',
+            steps: [
+              'Type each student\'s test (CA) score and exam score. The total is added for you.',
+              'Tap "Save" to keep your work. You can come back and continue later.',
+              'When every student has a score, tap "Send for approval". Your administrator will check it.',
+              'If the administrator sends it back, you will see their note at the top. Fix it and send again.',
+            ],
+          ),
+        ],
       ),
       body: _body(),
       bottomNavigationBar: (_loading || _error != null || !_editable || _roster.isEmpty)
@@ -237,7 +252,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
                       child: _busy
                           ? const SizedBox(
                               width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5))
-                          : const Text('Submit'),
+                          : const Text('Send for approval'),
                     ),
                   ),
                 ]),
@@ -274,7 +289,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
           _StatusChip(label: _sheet?.label ?? 'Not started', status: _sheet?.status),
         ]),
         const SizedBox(height: 4),
-        Text('Scored $_scoredCount of ${_roster.length} students  ·  CA max ${fmt(_limits.caMax)}, Exam max ${fmt(_limits.examMax)}',
+        Text('$_scoredCount of ${_roster.length} students scored  ·  Test (CA) out of ${fmt(_limits.caMax)}, Exam out of ${fmt(_limits.examMax)}',
             style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
         if (note.isNotEmpty && _editable) ...[
           const SizedBox(height: 12),
@@ -282,7 +297,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
                 color: cs.errorContainer, borderRadius: BorderRadius.circular(12)),
-            child: Text('Returned by your administrator: $note',
+            child: Text('Your school asked for changes: $note',
                 style: TextStyle(color: cs.onErrorContainer)),
           ),
         ],
@@ -292,7 +307,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
                 color: AppTheme.gold.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(12)),
-            child: Text('This sheet is ${_sheet!.label.toLowerCase()}, so scores are locked.'),
+            child: Text('These results were already sent (${_sheet!.label.toLowerCase()}), so the scores cannot be changed.'),
           ),
         ],
         const SizedBox(height: 12),
@@ -386,11 +401,7 @@ class _StudentRowState extends State<_StudentRow> {
           ),
         );
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return CardShell(
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

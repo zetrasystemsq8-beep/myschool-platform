@@ -44,17 +44,17 @@ class SetupHubScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        Text('Set up ${school.name}',
+        Text('Get ${school.name} ready',
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text('Work through these in order. You can come back any time.',
+        Text('Do these three things in order. You can change them any time.',
             style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
         const SizedBox(height: 16),
-        tile(1, Icons.event_note_outlined, 'Sessions & terms', 'Academic years and their terms',
+        tile(1, Icons.event_note_outlined, 'School years & terms', 'The current year and its terms',
             SessionsScreen(school: school)),
-        tile(2, Icons.class_outlined, 'Classes & subjects', 'What the school teaches and to whom',
+        tile(2, Icons.class_outlined, 'Classes & subjects', 'The classes you have and what you teach',
             ClassesSubjectsScreen(school: school)),
-        tile(3, Icons.groups_outlined, 'People', 'Students, teachers and parents',
+        tile(3, Icons.groups_outlined, 'People', 'Add students, teachers and parents',
             PeopleScreen(school: school)),
       ],
     );

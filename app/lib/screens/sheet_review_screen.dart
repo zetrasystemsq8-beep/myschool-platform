@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/help.dart';
+
+import '../widgets/app_card.dart';
+
 import '../data/admin_repository.dart';
 import '../data/models.dart';
 import '../data/school.dart';
@@ -122,26 +126,26 @@ class _SheetReviewScreenState extends State<SheetReviewScreen> {
   }
 
   Future<void> _approve() async {
-    if (await _confirm('Approve this sheet?', 'You can publish it afterwards.', 'Approve')) {
+    if (await _confirm('Approve these results?', 'They stay hidden from students and parents until you share them.', 'Approve')) {
       await _run(() => _repo.approve(_sheet.id), 'Approved.');
     }
   }
 
   Future<void> _publish() async {
-    if (await _confirm('Publish results?',
-        'Students and parents will see these results immediately.', 'Publish')) {
-      await _run(() => _repo.publish(_sheet.id), 'Published.');
+    if (await _confirm('Share with students and parents?',
+        'They will be able to see these results straight away.', 'Share')) {
+      await _run(() => _repo.publish(_sheet.id), 'Results shared.');
     }
   }
 
   Future<void> _return() async {
-    final note = await _askReason('Return to teacher', 'What should be corrected?');
-    if (note != null) await _run(() => _repo.returnToTeacher(_sheet.id, note), 'Returned to teacher.');
+    final note = await _askReason('Send back to teacher', 'What should the teacher fix?');
+    if (note != null) await _run(() => _repo.returnToTeacher(_sheet.id, note), 'Sent back to the teacher.');
   }
 
   Future<void> _unpublish() async {
-    final reason = await _askReason('Unpublish results', 'Why are you unpublishing?');
-    if (reason != null) await _run(() => _repo.unpublish(_sheet.id, reason), 'Unpublished.');
+    final reason = await _askReason('Hide from students and parents', 'Why are you hiding these results?');
+    if (reason != null) await _run(() => _repo.unpublish(_sheet.id, reason), 'Results hidden again.');
   }
 
   List<Widget> _actions() {
@@ -158,11 +162,11 @@ class _SheetReviewScreenState extends State<SheetReviewScreen> {
     const gap = SizedBox(width: 12);
     switch (_sheet.status) {
       case 'submitted':
-        return [outlined('Return', _return), gap, filled('Approve', _approve)];
+        return [outlined('Send back', _return), gap, filled('Approve', _approve)];
       case 'approved':
-        return [outlined('Return', _return), gap, filled('Publish', _publish)];
+        return [outlined('Send back', _return), gap, filled('Share results', _publish)];
       case 'published':
-        return [outlined('Unpublish', _unpublish)];
+        return [outlined('Hide results', _unpublish)];
       default:
         return const [];
     }
@@ -172,7 +176,20 @@ class _SheetReviewScreenState extends State<SheetReviewScreen> {
   Widget build(BuildContext context) {
     final actions = _actions();
     return Scaffold(
-      appBar: AppBar(title: Text('${_sheet.subjectName} · ${_sheet.className}')),
+      appBar: AppBar(
+        title: Text('${_sheet.subjectName} · ${_sheet.className}'),
+        actions: const [
+          HelpButton(
+            title: 'Checking results',
+            steps: [
+              'Look through the scores. The summary at the top shows the class average, highest and lowest.',
+              'Tap "Approve" if they are correct, then "Share results" so students and parents can see them.',
+              'Tap "Send back" and write what to fix if something is wrong. The teacher will see your note.',
+              'You can hide shared results again with "Hide results".',
+            ],
+          ),
+        ],
+      ),
       body: _body(),
       bottomNavigationBar: (_loading || _error != null || actions.isEmpty)
           ? null
@@ -219,7 +236,7 @@ class _SheetReviewScreenState extends State<SheetReviewScreen> {
         ]),
         if (note.isNotEmpty && _sheet.status != 'published') ...[
           const SizedBox(height: 8),
-          Text('Last note: $note',
+          Text('Note from last time: $note',
               style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
         ],
         const SizedBox(height: 12),
@@ -241,15 +258,11 @@ class _SheetReviewScreenState extends State<SheetReviewScreen> {
           const MessageView(
             icon: Icons.hourglass_empty,
             title: 'No scores yet',
-            message: 'The teacher has not entered scores for this sheet.',
+            message: 'The teacher has not entered any scores here yet.',
           ),
         for (final i in _items) ...[
-          Card(
-            elevation: 0,
-            margin: EdgeInsets.zero,
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            child: Padding(
+          CardShell(
+      child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(children: [
                 Expanded(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/app_card.dart';
+
 import '../data/models.dart';
 import '../data/portal_repository.dart';
 import '../data/school_repository.dart';
@@ -110,13 +112,8 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (_, i) {
           final a = _items[i];
-          return Card(
-            elevation: 0,
-            margin: EdgeInsets.zero,
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: InkWell(
+          return CardShell(
+      child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () => _open(a),
               child: Padding(

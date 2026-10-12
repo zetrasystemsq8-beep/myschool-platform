@@ -17,8 +17,11 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Material(
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-      borderRadius: BorderRadius.circular(16),
+      color: cs.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.6)),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
     );
@@ -41,6 +44,27 @@ class StatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+    );
+  }
+}
+
+/// Drop-in surface for hand-built cards (soft fill, hairline border, rounded corners).
+class CardShell extends StatelessWidget {
+  const CardShell({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Material(
+      color: cs.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.6)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
     );
   }
 }

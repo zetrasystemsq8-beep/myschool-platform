@@ -83,7 +83,7 @@ String friendlyError(Object error) {
           ? error.message
           : 'You are not allowed to do that.';
     }
-    return 'Service error: ${error.message}';
+    return 'Something went wrong on our side. Please try again in a moment.';
   }
   if (error is TimeoutException) {
     return 'The request took too long. Check your connection and try again.';

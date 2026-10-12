@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/help.dart';
+
 import '../data/school.dart';
 import '../data/school_repository.dart';
 import '../data/setup_repository.dart';
@@ -21,6 +23,16 @@ class ClassesSubjectsScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Classes & subjects'),
+          actions: const [
+            HelpButton(
+              title: 'Classes & subjects',
+              steps: [
+                'Under Classes, add every class, for example "JSS 1 A".',
+                'Under Subjects, add every subject, for example Mathematics with the code MTH.',
+                'You will use these when you add students and when you choose what each teacher teaches.',
+              ],
+            ),
+          ],
           bottom: const TabBar(tabs: [Tab(text: 'Classes'), Tab(text: 'Subjects')]),
         ),
         body: TabBarView(children: [

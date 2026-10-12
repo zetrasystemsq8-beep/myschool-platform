@@ -150,12 +150,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        Card(
-          elevation: 0,
-          margin: EdgeInsets.zero,
-          color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
+        CardShell(
+      child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(children: [
               if (student != null) ...[
@@ -214,8 +210,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Text(
                 widget.member.role == 'teacher'
-                ? 'Enter and submit results from the Classes tab.'
-                : 'Approve results in Review, and manage the school in Setup.'),
+                ? 'Enter results from the Classes tab.'
+                : 'Check results under Approvals, and manage the school under My school.'),
           ),
         ],
         const SizedBox(height: 24),

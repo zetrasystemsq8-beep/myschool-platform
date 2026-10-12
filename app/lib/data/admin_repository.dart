@@ -24,6 +24,17 @@ class AdminRepository {
     return rows.map(SheetSummary.fromMap).toList();
   }
 
+  /// How many sheets are at each stage (for the Home tab).
+  Future<Map<String, int>> sheetCounts(String schoolId) async {
+    final rows = await _db.from('result_sheets').select('status').eq('school_id', schoolId);
+    final counts = <String, int>{};
+    for (final r in rows) {
+      final s = r['status'] as String;
+      counts[s] = (counts[s] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   Future<SheetSummary?> sheet(String id) async {
     final row = await _db.from('result_sheets').select(_sheetCols).eq('id', id).maybeSingle();
     return row == null ? null : SheetSummary.fromMap(row);

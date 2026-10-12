@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/app_card.dart';
+
 import '../data/auth_repository.dart';
 import '../data/models.dart';
 import '../data/school.dart';
@@ -125,12 +127,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (_, i) {
           final a = _items[i];
-          return Card(
-            elevation: 0,
-            margin: EdgeInsets.zero,
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: InkWell(
+          return CardShell(
+      child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () => _pickTerm(a),
               child: Padding(

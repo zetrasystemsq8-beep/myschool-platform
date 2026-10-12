@@ -5,18 +5,31 @@ import '../data/models.dart';
 import '../data/portal_repository.dart';
 import '../data/school.dart';
 import '../data/school_repository.dart';
+import '../widgets/help.dart';
 import '../widgets/state_views.dart';
 import 'admin_announcements_screen.dart';
 import 'admin_review_screen.dart';
 import 'announcements_screen.dart';
+import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'results_screen.dart';
 import 'setup_hub_screen.dart';
 import 'teacher_home_screen.dart';
 
-/// Signed-in area with bottom navigation.
-/// Students/parents: Results, Announcements, Profile.  Staff: Announcements, Account
-/// (teacher and admin tools arrive in later updates).
+typedef _Tab = ({
+  String id,
+  String title,
+  String nav,
+  IconData icon,
+  IconData iconOn,
+  Widget page,
+  HelpButton? help,
+});
+
+/// Signed-in area. Every role starts on Home.
+///   Student / parent:  Home, Results, Notices, Profile
+///   Teacher:           Home, Classes, Notices, Account
+///   School admin:      Home, Approvals, My school, Notices, Account
 class PortalShell extends StatefulWidget {
   const PortalShell({super.key, required this.school, required this.member});
 
@@ -76,6 +89,8 @@ class _PortalShellState extends State<PortalShell> {
   Widget build(BuildContext context) {
     final member = widget.member;
     final withResults = member.hasStudentView;
+    final isTeacher = member.role == 'teacher';
+    final isAdmin = member.role == 'school_admin';
 
     if (_loading) return const Scaffold(body: LoadingView());
     if (_error != null) {
@@ -89,51 +104,150 @@ class _PortalShellState extends State<PortalShell> {
       );
     }
 
-    final isTeacher = member.role == 'teacher';
-    final isAdmin = member.role == 'school_admin';
-    final tabs = <({String title, String nav, IconData icon, IconData iconOn, Widget page})>[
+    late final List<_Tab> tabs;
+    void goTo(String id) {
+      final i = tabs.indexWhere((t) => t.id == id);
+      if (i >= 0) setState(() => _tab = i);
+    }
+
+    final homeHelp = withResults
+        ? const HelpButton(
+            title: 'Your home page',
+            steps: [
+              'Home shows your latest results and the newest notices from your school.',
+              'Open Results to see every subject and your earlier terms.',
+              'Open Notices for news from your school.',
+            ],
+          )
+        : (isTeacher
+            ? const HelpButton(
+                title: 'Your home page',
+                steps: [
+                  'Home shows how many classes you teach and which results are waiting.',
+                  'Open Classes to enter scores.',
+                  'If the administrator sends results back, you will see a reminder here.',
+                ],
+              )
+            : const HelpButton(
+                title: 'Your home page',
+                steps: [
+                  'Home shows how many results are waiting for your approval.',
+                  'Follow the "Get your school ready" list until every step is ticked.',
+                  'Open Approvals to check, approve and share results.',
+                ],
+              ));
+
+    tabs = <_Tab>[
+      (
+        id: 'home',
+        title: widget.school.name,
+        nav: 'Home',
+        icon: Icons.home_outlined,
+        iconOn: Icons.home,
+        page: HomeScreen(
+          key: ValueKey('h-${_current?.id}'),
+          school: widget.school,
+          member: member,
+          student: _current,
+          active: _tab == 0,
+          onGoTo: goTo,
+        ),
+        help: homeHelp,
+      ),
       if (withResults)
         (
-          title: 'Results',
+          id: 'results',
+          title: 'My results',
           nav: 'Results',
           icon: Icons.assignment_outlined,
           iconOn: Icons.assignment,
           page: ResultsScreen(key: ValueKey('r-${_current?.id}'), student: _current),
+          help: const HelpButton(
+            title: 'Your results',
+            steps: [
+              'Each card is one subject, with the test (CA), exam, total and grade.',
+              'Use the buttons at the top to look at earlier terms and years.',
+              'Pull down to refresh. New results appear when your school shares them.',
+            ],
+          ),
         ),
       if (isTeacher)
         (
+          id: 'classes',
           title: 'My classes',
           nav: 'Classes',
           icon: Icons.class_outlined,
           iconOn: Icons.class_,
           page: TeacherHomeScreen(school: widget.school),
+          help: const HelpButton(
+            title: 'My classes',
+            steps: [
+              'These are the classes and subjects your administrator gave you.',
+              'Tap one and choose the term. Then type each student\'s scores.',
+              'Tap "Send for approval" when everyone has a score.',
+            ],
+          ),
         ),
       if (isAdmin)
         (
-          title: 'Review results',
-          nav: 'Review',
+          id: 'review',
+          title: 'Approvals',
+          nav: 'Approvals',
           icon: Icons.fact_check_outlined,
           iconOn: Icons.fact_check,
           page: AdminReviewScreen(school: widget.school),
+          help: const HelpButton(
+            title: 'Approvals',
+            intro: 'Teachers send their results here. Students and parents see nothing until you share them.',
+            steps: [
+              '"Waiting" lists results sent by teachers. Tap one to check the scores.',
+              'Tap "Approve" if they are right. Tap "Send back" and write a note if not.',
+              'After approving, tap "Share results" so students and parents can see them.',
+            ],
+          ),
         ),
       if (isAdmin)
         (
-          title: 'Set up school',
-          nav: 'Setup',
+          id: 'setup',
+          title: 'My school',
+          nav: 'My school',
           icon: Icons.settings_outlined,
           iconOn: Icons.settings,
           page: SetupHubScreen(school: widget.school),
+          help: const HelpButton(
+            title: 'My school',
+            steps: [
+              'Add the school year and its terms.',
+              'Add your classes and subjects.',
+              'Add students, teachers and parents, then choose what each teacher teaches.',
+            ],
+          ),
         ),
       (
-        title: 'Announcements',
-        nav: 'News',
+        id: 'notices',
+        title: 'Notices',
+        nav: 'Notices',
         icon: Icons.campaign_outlined,
         iconOn: Icons.campaign,
         page: isAdmin
             ? AdminAnnouncementsScreen(schoolId: widget.school.id)
             : AnnouncementsScreen(schoolId: widget.school.id),
+        help: HelpButton(
+          title: 'Notices',
+          steps: isAdmin
+              ? const [
+                  'Tap "New" to write a notice for your school.',
+                  'Choose who should see it: everyone, students, parents or staff.',
+                  '"Draft" is only visible to you. "Published" is visible to the people you chose.',
+                ]
+              : const [
+                  'Notices from your school appear here, newest first.',
+                  'Tap one to read all of it. Pull down to refresh.',
+                ],
+        ),
       ),
       (
+        id: 'profile',
         title: withResults ? 'Profile' : 'Account',
         nav: withResults ? 'Profile' : 'Account',
         icon: Icons.person_outline,
@@ -144,43 +258,54 @@ class _PortalShellState extends State<PortalShell> {
           member: member,
           student: _current,
         ),
+        help: const HelpButton(
+          title: 'Your profile',
+          steps: [
+            'See your details and your school.',
+            'Choose Light, Dark or Auto appearance.',
+            'Change your password or PIN here. Tap "Sign out" when you are done.',
+          ],
+        ),
       ),
     ];
 
+    final current = tabs[_tab];
     return PopScope(
       canPop: _tab == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) setState(() => _tab = 0);
       },
       child: Scaffold(
-      appBar: AppBar(
-        title: Text(tabs[_tab].title),
-        actions: [
-          if (member.isParent && _students.length > 1)
-            PopupMenuButton<int>(
-              tooltip: 'Switch child',
-              icon: const Icon(Icons.family_restroom),
-              onSelected: (i) => setState(() => _child = i),
-              itemBuilder: (_) => [
-                for (var i = 0; i < _students.length; i++)
-                  CheckedPopupMenuItem(
-                    value: i,
-                    checked: i == _child,
-                    child: Text(_students[i].fullName),
-                  ),
-              ],
-            ),
-        ],
+        appBar: AppBar(
+          title: Text(current.title),
+          actions: [
+            if (member.isParent && _students.length > 1)
+              PopupMenuButton<int>(
+                tooltip: 'Switch child',
+                icon: const Icon(Icons.family_restroom),
+                onSelected: (i) => setState(() => _child = i),
+                itemBuilder: (_) => [
+                  for (var i = 0; i < _students.length; i++)
+                    CheckedPopupMenuItem(
+                      value: i,
+                      checked: i == _child,
+                      child: Text(_students[i].fullName),
+                    ),
+                ],
+              ),
+            if (current.help != null) current.help!,
+          ],
+        ),
+        body: IndexedStack(index: _tab, children: [for (final t in tabs) t.page]),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _tab,
+          onDestinationSelected: (i) => setState(() => _tab = i),
+          destinations: [
+            for (final t in tabs)
+              NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.iconOn), label: t.nav),
+          ],
+        ),
       ),
-      body: IndexedStack(index: _tab, children: [for (final t in tabs) t.page]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: [
-          for (final t in tabs)
-            NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.iconOn), label: t.nav),
-        ],
-      ),
-    ));
+    );
   }
 }

@@ -28,6 +28,22 @@ class TeacherRepository {
     return list;
   }
 
+  /// Teacher's sheets: in progress, waiting for approval, and sent back with a note.
+  Future<({int inProgress, int waiting, int sentBack})> overview(String schoolId) async {
+    final rows = await _db.from('result_sheets').select('status, return_note').eq('school_id', schoolId);
+    var inProgress = 0, waiting = 0, sentBack = 0;
+    for (final r in rows) {
+      final note = ((r['return_note'] as String?) ?? '').trim();
+      if (r['status'] == 'draft') {
+        inProgress++;
+        if (note.isNotEmpty) sentBack++;
+      } else if (r['status'] == 'submitted') {
+        waiting++;
+      }
+    }
+    return (inProgress: inProgress, waiting: waiting, sentBack: sentBack);
+  }
+
   Future<List<TermInfo>> terms(String schoolId, String sessionId) async {
     final rows = await _db
         .from('terms')

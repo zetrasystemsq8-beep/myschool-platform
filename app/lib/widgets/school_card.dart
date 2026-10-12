@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_card.dart';
+
 import '../data/school.dart';
 import 'school_avatar.dart';
 
@@ -14,11 +16,7 @@ class SchoolCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final subtitle = [school.code, if (school.location.isNotEmpty) school.location]
         .join('  ·  ');
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return CardShell(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,

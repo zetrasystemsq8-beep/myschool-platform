@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/help.dart';
+
 import '../data/models.dart';
 import '../data/school.dart';
 import '../data/school_repository.dart';
@@ -26,19 +28,19 @@ class TeacherAssignmentsScreen extends StatelessWidget {
       if (!context.mounted) return false;
       return showFormSheet(
         context,
-        title: 'Assign to ${teacher.name}',
-        submitLabel: 'Assign',
+        title: 'What does ${teacher.name} teach?',
+        submitLabel: 'Save',
         fields: [
           FieldSpec('class', 'Class', kind: FieldKind.choice, required: true, options: [for (final c in classes) (c.id, c.name)]),
           FieldSpec('subject', 'Subject', kind: FieldKind.choice, required: true, options: [for (final s in subjects) (s.id, s.name)]),
-          FieldSpec('session', 'Session', kind: FieldKind.choice, required: true, options: [for (final s in sessions) (s.id, s.name)]),
+          FieldSpec('session', 'School year', kind: FieldKind.choice, required: true, options: [for (final s in sessions) (s.id, s.name)]),
         ],
         onSubmit: (v) async {
           try {
             await repo.addAssignment(school.id, teacher.userId, v['class']!, v['subject']!, v['session']!);
           } catch (e) {
             throw FormError(e.toString().contains('23505')
-                ? 'This teacher already has that class and subject for the session.'
+                ? 'This teacher already has that class and subject for the school year.'
                 : friendlyError(e));
           }
         },
@@ -54,13 +56,24 @@ class TeacherAssignmentsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(teacher.name)),
+      appBar: AppBar(
+        title: Text(teacher.name),
+        actions: const [
+          HelpButton(
+            title: 'What a teacher teaches',
+            steps: [
+              'Tap "Add class" and choose the class, the subject and the school year.',
+              'The teacher can then enter results for that class and subject, and nothing else.',
+            ],
+          ),
+        ],
+      ),
       body: AsyncList<Assignment>(
         load: () => TeacherRepository.instance.assignments(teacher.userId, school.id),
         emptyIcon: Icons.assignment_ind_outlined,
-        emptyTitle: 'Nothing assigned yet',
-        emptyMessage: 'Assign a class and subject so this teacher can enter results.',
-        addLabel: 'Assign',
+        emptyTitle: 'No classes chosen yet',
+        emptyMessage: 'Add the class and subject this teacher teaches. They can then enter results for it.',
+        addLabel: 'Add class',
         onAdd: () => _add(context),
         itemBuilder: (ctx, a, reload) => AppCard(
           child: Row(children: [
@@ -76,7 +89,7 @@ class TeacherAssignmentsScreen extends StatelessWidget {
               icon: Icon(Icons.delete_outline, color: cs.error),
               onPressed: () async {
                 final ok = await confirmDialog(ctx,
-                    title: 'Remove assignment?',
+                    title: 'Remove this class?',
                     message: '${teacher.name} will no longer be able to enter ${a.subjectName} results for ${a.className}.',
                     action: 'Remove',
                     destructive: true);

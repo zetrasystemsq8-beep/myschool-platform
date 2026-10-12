@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/app_card.dart';
+
 import '../data/models.dart';
 import '../data/portal_repository.dart';
 import '../data/school_repository.dart';
@@ -180,11 +182,7 @@ class _SubjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return CardShell(
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(children: [
