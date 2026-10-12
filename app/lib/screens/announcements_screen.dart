@@ -128,6 +128,11 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                     Text(formatDate(a.publishedAt),
                         style: theme.textTheme.bodySmall
                             ?.copyWith(color: cs.onSurfaceVariant)),
+                    if ((a.className ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text('For ${a.className}',
+                          style: theme.textTheme.labelMedium?.copyWith(color: cs.primary)),
+                    ],
                     const SizedBox(height: 8),
                     Text(a.body,
                         maxLines: 3,

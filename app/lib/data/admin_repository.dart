@@ -67,7 +67,7 @@ class AdminRepository {
   Future<List<Announcement>> announcements(String schoolId) async {
     final rows = await _db
         .from('announcements')
-        .select('id, title, body, audience, status, published_at')
+        .select('id, title, body, audience, status, published_at, class_id, classes(name)')
         .eq('school_id', schoolId)
         .order('created_at', ascending: false)
         .limit(100);
@@ -82,6 +82,7 @@ class AdminRepository {
     required String body,
     required String audience,
     required String status,
+    String? classId,
   }) async {
     if (id == null) {
       await _db.from('announcements').insert({
@@ -90,11 +91,18 @@ class AdminRepository {
         'body': body,
         'audience': audience,
         'status': status,
+        'class_id': classId,
       });
     } else {
       await _db
           .from('announcements')
-          .update({'title': title, 'body': body, 'audience': audience, 'status': status})
+          .update({
+            'title': title,
+            'body': body,
+            'audience': audience,
+            'status': status,
+            'class_id': classId,
+          })
           .eq('id', id);
     }
   }

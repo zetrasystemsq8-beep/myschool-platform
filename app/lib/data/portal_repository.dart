@@ -45,7 +45,7 @@ class PortalRepository {
   Future<List<Announcement>> announcements(String schoolId) async {
     final rows = await _db
         .from('announcements')
-        .select('id, title, body, audience, published_at')
+        .select('id, title, body, audience, published_at, class_id, classes(name)')
         .eq('school_id', schoolId)
         .order('published_at', ascending: false)
         .limit(30);
@@ -65,6 +65,21 @@ class PortalRepository {
     final ses = (rows.first['academic_sessions'] as Map?)?['name'];
     final parts = [cls, ses].whereType<String>().toList();
     return parts.isEmpty ? null : parts.join(' · ');
+  }
+
+  Future<List<GradeBand>> gradingScale(String schoolId) async {
+    final rows = await _db
+        .from('grading_scales')
+        .select('grade, min_score, remark')
+        .eq('school_id', schoolId)
+        .order('min_score', ascending: false);
+    return rows.map(GradeBand.fromMap).toList();
+  }
+
+  /// Staff only (the database returns nothing to students and parents).
+  Future<List<ClassSummaryRow>> classSummary(String schoolId) async {
+    final rows = await _db.from('class_result_summary').select().eq('school_id', schoolId);
+    return rows.map(ClassSummaryRow.fromMap).toList();
   }
 
   Future<String?> fullName(String uid) async {

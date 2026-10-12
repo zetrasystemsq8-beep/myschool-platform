@@ -14,6 +14,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_card.dart';
 import '../widgets/help.dart';
 import '../widgets/state_views.dart';
+import 'class_summary_screen.dart';
 
 /// First tab for everyone: a greeting, what needs attention, and the next step.
 class HomeScreen extends StatefulWidget {
@@ -129,6 +130,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       if (!quiet) setState(() { _error = friendlyError(e); _loading = false; });
     }
+  }
+
+  void _openSummary() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ClassSummaryScreen(school: widget.school)),
+    );
   }
 
   String get _greeting {
@@ -270,6 +277,14 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: const Icon(Icons.edit_note),
           label: const Text('Enter results'),
         ),
+      if (_classes > 0) ...[
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: _openSummary,
+          icon: const Icon(Icons.bar_chart),
+          label: const Text('Class results summary'),
+        ),
+      ],
       const SizedBox(height: 14),
       const HintBanner(
         icon: Icons.tips_and_updates_outlined,
@@ -292,6 +307,12 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(width: 10),
         _stat('Approved, not shared yet', _toShare, onTap: () => widget.onGoTo('review')),
       ]),
+      const SizedBox(height: 12),
+      OutlinedButton.icon(
+        onPressed: _openSummary,
+        icon: const Icon(Icons.bar_chart),
+        label: const Text('Class results summary'),
+      ),
       const SizedBox(height: 18),
       if (!ready) ...[
         SectionTitle('Get your school ready'),

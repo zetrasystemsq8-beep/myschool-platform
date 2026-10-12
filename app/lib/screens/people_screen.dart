@@ -9,6 +9,9 @@ import '../widgets/app_card.dart';
 import '../widgets/async_list.dart';
 import '../widgets/feedback.dart';
 import '../widgets/form_sheet.dart';
+import '../data/models.dart';
+import '../data/portal_repository.dart';
+import '../data/report_card_pdf.dart';
 import 'teacher_assignments_screen.dart';
 
 final _pinRe = RegExp(r'^[A-Za-z0-9]{6,32}$');
@@ -198,6 +201,49 @@ class _StudentsTab extends StatelessWidget {
     });
   }
 
+  Future<void> _reportCard(BuildContext context, StudentRow s) async {
+    try {
+      final groups = groupResults(await PortalRepository.instance.results(s.id));
+      if (groups.isEmpty) {
+        if (context.mounted) notify(context, 'No shared results for ${s.name} yet.', error: true);
+        return;
+      }
+      var chosen = groups.first;
+      if (groups.length > 1 && context.mounted) {
+        final picked = await showModalBottomSheet<TermGroup>(
+          context: context,
+          showDragHandle: true,
+          builder: (ctx) => SafeArea(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Which term?', style: Theme.of(ctx).textTheme.titleMedium),
+                ),
+              ),
+              for (final g in groups)
+                ListTile(title: Text(g.label), subtitle: Text(g.className), onTap: () => Navigator.pop(ctx, g)),
+              const SizedBox(height: 8),
+            ]),
+          ),
+        );
+        if (picked == null) return;
+        chosen = picked;
+      }
+      final scale = await PortalRepository.instance.gradingScale(school.id);
+      await printReportCard(
+        schoolName: school.name,
+        studentName: s.name,
+        admissionNumber: s.admissionNumber,
+        term: chosen,
+        scale: scale,
+      );
+    } catch (e) {
+      if (context.mounted) notify(context, friendlyError(e), error: true);
+    }
+  }
+
   Future<void> _actions(BuildContext context, StudentRow s, Future<void> Function() reload) async {
     final choice = await showModalBottomSheet<String>(
       context: context,
@@ -216,6 +262,11 @@ class _StudentsTab extends StatelessWidget {
             title: const Text('Put in a class'),
             onTap: () => Navigator.pop(ctx, 'enroll'),
           ),
+          ListTile(
+            leading: const Icon(Icons.picture_as_pdf_outlined),
+            title: const Text('Report card'),
+            onTap: () => Navigator.pop(ctx, 'card'),
+          ),
           if (s.userId != null)
             ListTile(
               leading: const Icon(Icons.lock_reset),
@@ -229,6 +280,7 @@ class _StudentsTab extends StatelessWidget {
     if (!context.mounted) return;
     if (choice == 'enroll') await _enroll(context, s, reload);
     if (choice == 'pin') await _resetPin(context, s);
+    if (choice == 'card') await _reportCard(context, s);
   }
 
   @override

@@ -39,6 +39,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
   final _repo = TeacherRepository.instance;
   final Map<String, TextEditingController> _ca = {};
   final Map<String, TextEditingController> _exam = {};
+  final Map<String, TextEditingController> _remark = {};
   final Map<String, ScoreItem> _saved = {};
 
   bool _loading = true;
@@ -64,6 +65,9 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
     for (final c in _exam.values) {
       c.dispose();
     }
+    for (final c in _remark.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -77,6 +81,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
       final item = _saved[r.studentId];
       _ca.putIfAbsent(r.studentId, () => TextEditingController()).text = _text(item?.ca);
       _exam.putIfAbsent(r.studentId, () => TextEditingController()).text = _text(item?.exam);
+      _remark.putIfAbsent(r.studentId, () => TextEditingController()).text = item?.remark ?? '';
     }
   }
 
@@ -125,7 +130,13 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
       final ca = _read(_ca[r.studentId]!, _limits.caMax, 'CA', r);
       final exam = _read(_exam[r.studentId]!, _limits.examMax, 'Exam', r);
       if (ca != null || exam != null || _saved.containsKey(r.studentId)) {
-        rows.add({'student_id': r.studentId, 'ca_score': ca, 'exam_score': exam});
+        final remark = _remark[r.studentId]!.text.trim();
+        rows.add({
+          'student_id': r.studentId,
+          'ca_score': ca,
+          'exam_score': exam,
+          'remark': remark.isEmpty ? null : remark,
+        });
       }
     }
     return rows;
@@ -316,6 +327,7 @@ class _ResultEntryScreenState extends State<ResultEntryScreen> {
             entry: r,
             ca: _ca[r.studentId]!,
             exam: _exam[r.studentId]!,
+            remark: _remark[r.studentId]!,
             caMax: _limits.caMax,
             examMax: _limits.examMax,
             saved: _saved[r.studentId],
@@ -356,6 +368,7 @@ class _StudentRow extends StatefulWidget {
     required this.entry,
     required this.ca,
     required this.exam,
+    required this.remark,
     required this.caMax,
     required this.examMax,
     required this.saved,
@@ -365,6 +378,7 @@ class _StudentRow extends StatefulWidget {
   final RosterEntry entry;
   final TextEditingController ca;
   final TextEditingController exam;
+  final TextEditingController remark;
   final double caMax;
   final double examMax;
   final ScoreItem? saved;
@@ -433,6 +447,19 @@ class _StudentRowState extends State<_StudentRow> {
             const SizedBox(width: 10),
             field(widget.exam, 'Exam', widget.examMax),
           ]),
+          const SizedBox(height: 10),
+          TextField(
+            controller: widget.remark,
+            enabled: widget.enabled,
+            textCapitalization: TextCapitalization.sentences,
+            maxLength: 80,
+            decoration: const InputDecoration(
+              labelText: 'Teacher remark (optional)',
+              hintText: 'e.g. Good effort',
+              isDense: true,
+              counterText: '',
+            ),
+          ),
         ]),
       ),
     );

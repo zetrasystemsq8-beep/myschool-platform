@@ -10,7 +10,9 @@ import '../widgets/state_views.dart';
 import 'admin_announcements_screen.dart';
 import 'admin_review_screen.dart';
 import 'announcements_screen.dart';
+import '../data/notification_repository.dart';
 import 'home_screen.dart';
+import 'notifications_screen.dart';
 import 'profile_screen.dart';
 import 'results_screen.dart';
 import 'setup_hub_screen.dart';
@@ -46,6 +48,16 @@ class _PortalShellState extends State<PortalShell> {
   int _tab = 0;
   bool _loading = true;
   String? _error;
+  int _unread = 0;
+
+  Future<void> _refreshUnread() async {
+    try {
+      final n = await NotificationRepository.instance.unreadCount(widget.school.id);
+      if (mounted) setState(() => _unread = n);
+    } catch (_) {
+      // The bell simply shows no badge if this fails.
+    }
+  }
 
   @override
   void initState() {
@@ -74,6 +86,7 @@ class _PortalShellState extends State<PortalShell> {
         _child = 0;
         _loading = false;
       });
+      _refreshUnread();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -161,7 +174,7 @@ class _PortalShellState extends State<PortalShell> {
           nav: 'Results',
           icon: Icons.assignment_outlined,
           iconOn: Icons.assignment,
-          page: ResultsScreen(key: ValueKey('r-${_current?.id}'), student: _current),
+          page: ResultsScreen(key: ValueKey('r-${_current?.id}'), student: _current, school: widget.school),
           help: const HelpButton(
             title: 'Your results',
             steps: [
@@ -293,13 +306,31 @@ class _PortalShellState extends State<PortalShell> {
                     ),
                 ],
               ),
+            IconButton(
+              tooltip: 'Notifications',
+              icon: Badge(
+                label: Text('$_unread'),
+                isLabelVisible: _unread > 0,
+                child: const Icon(Icons.notifications_outlined),
+              ),
+              onPressed: () async {
+                final target = await Navigator.of(context).push<String>(
+                  MaterialPageRoute(builder: (_) => NotificationsScreen(school: widget.school)),
+                );
+                _refreshUnread();
+                if (target != null) goTo(target);
+              },
+            ),
             if (current.help != null) current.help!,
           ],
         ),
         body: IndexedStack(index: _tab, children: [for (final t in tabs) t.page]),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _tab,
-          onDestinationSelected: (i) => setState(() => _tab = i),
+          onDestinationSelected: (i) {
+            setState(() => _tab = i);
+            _refreshUnread();
+          },
           destinations: [
             for (final t in tabs)
               NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.iconOn), label: t.nav),

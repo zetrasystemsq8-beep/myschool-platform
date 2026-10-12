@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   supabase_flutter: ^2.8.0
   shared_preferences: ^2.3.0
+  pdf: ^3.11.0
+  printing: ^5.13.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.1
@@ -25,3 +27,5 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/fonts/

@@ -179,6 +179,8 @@ class Announcement {
     required this.audience,
     this.status = 'published',
     this.publishedAt,
+    this.classId,
+    this.className,
   });
 
   final String id;
@@ -187,6 +189,8 @@ class Announcement {
   final String audience;
   final String status; // draft | published | archived (admins see all)
   final DateTime? publishedAt;
+  final String? classId; // null = whole school
+  final String? className;
 
   factory Announcement.fromMap(Map<String, dynamic> m) => Announcement(
         id: m['id'] as String,
@@ -195,6 +199,8 @@ class Announcement {
         audience: m['audience'] as String,
         status: (m['status'] as String?) ?? 'published',
         publishedAt: DateTime.tryParse((m['published_at'] as String?) ?? '')?.toLocal(),
+        classId: m['class_id'] as String?,
+        className: (m['classes'] as Map?)?['name'] as String?,
       );
 }
 
@@ -298,13 +304,14 @@ class RosterEntry {
 }
 
 class ScoreItem {
-  const ScoreItem({required this.studentId, this.ca, this.exam, this.total, this.grade});
+  const ScoreItem({required this.studentId, this.ca, this.exam, this.total, this.grade, this.remark});
 
   final String studentId;
   final double? ca;
   final double? exam;
   final double? total;
   final String? grade;
+  final String? remark;
 
   factory ScoreItem.fromMap(Map<String, dynamic> m) => ScoreItem(
         studentId: m['student_id'] as String,
@@ -312,6 +319,7 @@ class ScoreItem {
         exam: _num(m['exam_score']),
         total: _num(m['total']),
         grade: m['grade'] as String?,
+        remark: m['remark'] as String?,
       );
 }
 
@@ -397,4 +405,101 @@ class ReviewItem {
       grade: m['grade'] as String?,
     );
   }
+}
+
+// ---------------------------------------------------------------- notifications, report cards, summaries
+
+class NotificationItem {
+  const NotificationItem({
+    required this.id,
+    required this.kind,
+    required this.title,
+    this.body,
+    this.entityId,
+    this.createdAt,
+    this.readAt,
+  });
+
+  final String id;
+  final String kind;
+  final String title;
+  final String? body;
+  final String? entityId;
+  final DateTime? createdAt;
+  final DateTime? readAt;
+
+  bool get isRead => readAt != null;
+
+  factory NotificationItem.fromMap(Map<String, dynamic> m) => NotificationItem(
+        id: m['id'] as String,
+        kind: m['kind'] as String,
+        title: m['title'] as String,
+        body: m['body'] as String?,
+        entityId: m['entity_id'] as String?,
+        createdAt: DateTime.tryParse((m['created_at'] as String?) ?? '')?.toLocal(),
+        readAt: DateTime.tryParse((m['read_at'] as String?) ?? '')?.toLocal(),
+      );
+}
+
+/// One line of the school's grading scale (grade = highest band whose minimum the total reaches).
+class GradeBand {
+  const GradeBand({required this.grade, required this.minScore, this.remark});
+
+  final String grade;
+  final double minScore;
+  final String? remark;
+
+  factory GradeBand.fromMap(Map<String, dynamic> m) => GradeBand(
+        grade: m['grade'] as String,
+        minScore: _num(m['min_score']) ?? 0,
+        remark: m['remark'] as String?,
+      );
+}
+
+/// Class + subject + term statistics for teachers/admins (approved or shared results only).
+class ClassSummaryRow {
+  const ClassSummaryRow({
+    required this.status,
+    required this.termId,
+    required this.termName,
+    required this.termNumber,
+    required this.sessionName,
+    required this.classId,
+    required this.className,
+    required this.subjectName,
+    required this.scored,
+    this.average,
+    this.lowest,
+    this.highest,
+  });
+
+  final String status;
+  final String termId;
+  final String termName;
+  final int termNumber;
+  final String sessionName;
+  final String classId;
+  final String className;
+  final String subjectName;
+  final int scored;
+  final double? average;
+  final double? lowest;
+  final double? highest;
+
+  String get termLabel => '$sessionName · $termName';
+
+  factory ClassSummaryRow.fromMap(Map<String, dynamic> m) => ClassSummaryRow(
+        status: m['status'] as String,
+        termId: m['term_id'] as String,
+        termName: m['term_name'] as String,
+        termNumber: (m['term_number'] as num).toInt(),
+        sessionName: m['session_name'] as String,
+        classId: m['class_id'] as String,
+        className: m['class_name'] as String,
+        subjectName: m['subject_name'] as String,
+        scored: (m['scored'] as num?)?.toInt() ?? 0,
+        average: _num(m['average']),
+        lowest: _num(m['lowest']),
+        highest: _num(m['highest']),
+      );
 }

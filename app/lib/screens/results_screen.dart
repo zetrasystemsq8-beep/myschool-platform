@@ -4,15 +4,20 @@ import '../widgets/app_card.dart';
 
 import '../data/models.dart';
 import '../data/portal_repository.dart';
+import '../data/report_card_pdf.dart';
+import '../data/school.dart';
 import '../data/school_repository.dart';
 import '../theme/app_theme.dart';
+import '../widgets/feedback.dart';
+import '../widgets/progress_view.dart';
 import '../widgets/state_views.dart';
 
 /// Published results for one student. Previous sessions/terms are the chips at the top.
 class ResultsScreen extends StatefulWidget {
-  const ResultsScreen({super.key, required this.student});
+  const ResultsScreen({super.key, required this.student, required this.school});
 
   final StudentInfo? student;
+  final School school;
 
   @override
   State<ResultsScreen> createState() => _ResultsScreenState();
@@ -21,8 +26,29 @@ class ResultsScreen extends StatefulWidget {
 class _ResultsScreenState extends State<ResultsScreen> {
   List<TermGroup> _terms = const [];
   int _selected = 0;
+  int _view = 0; // 0 = results by term, 1 = progress over time
+  bool _printing = false;
   bool _loading = true;
   String? _error;
+
+  Future<void> _printCard(TermGroup term) async {
+    final student = widget.student;
+    if (student == null) return;
+    setState(() => _printing = true);
+    try {
+      final scale = await PortalRepository.instance.gradingScale(widget.school.id);
+      await printReportCard(
+        schoolName: widget.school.name,
+        studentName: student.fullName,
+        admissionNumber: student.admissionNumber,
+        term: term,
+        scale: scale,
+      );
+    } catch (e) {
+      if (mounted) notify(context, friendlyError(e), error: true);
+    }
+    if (mounted) setState(() => _printing = false);
+  }
 
   @override
   void initState() {
@@ -103,25 +129,46 @@ class _ResultsScreenState extends State<ResultsScreen> {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 14),
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _terms.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, i) => ChoiceChip(
-                label: Text(_terms[i].label),
-                selected: i == _selected,
-                onSelected: (_) => setState(() => _selected = i),
-              ),
-            ),
+          SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(value: 0, label: Text('Results'), icon: Icon(Icons.assignment_outlined)),
+              ButtonSegment(value: 1, label: Text('Progress'), icon: Icon(Icons.show_chart)),
+            ],
+            selected: {_view},
+            onSelectionChanged: (v) => setState(() => _view = v.first),
           ),
           const SizedBox(height: 14),
-          _Summary(term: term),
-          const SizedBox(height: 14),
-          for (final row in term.rows) ...[
-            _SubjectCard(row: row),
-            const SizedBox(height: 10),
+          if (_view == 1)
+            ProgressView(terms: _terms)
+          else ...[
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _terms.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (_, i) => ChoiceChip(
+                  label: Text(_terms[i].label),
+                  selected: i == _selected,
+                  onSelected: (_) => setState(() => _selected = i),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            _Summary(term: term),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _printing ? null : () => _printCard(term),
+              icon: _printing
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.picture_as_pdf_outlined),
+              label: const Text('Report card (print or save as PDF)'),
+            ),
+            const SizedBox(height: 14),
+            for (final row in term.rows) ...[
+              _SubjectCard(row: row),
+              const SizedBox(height: 10),
+            ],
           ],
         ],
       ),

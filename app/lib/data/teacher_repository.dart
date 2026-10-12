@@ -114,7 +114,7 @@ class TeacherRepository {
   Future<List<ScoreItem>> items(String sheetId) async {
     final rows = await _db
         .from('result_items')
-        .select('student_id, ca_score, exam_score, total, grade')
+        .select('student_id, ca_score, exam_score, total, grade, remark')
         .eq('sheet_id', sheetId);
     return rows.map(ScoreItem.fromMap).toList();
   }
