@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/brand_header.dart';
+
 import '../widgets/app_card.dart';
 
 import '../data/auth_repository.dart';
@@ -138,16 +140,8 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
     final motto = school.motto?.trim() ?? '';
-    return Container(
+    return BrandHeader(
       padding: EdgeInsets.fromLTRB(24, top + 32, 24, 28),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppTheme.green, AppTheme.greenLight],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-      ),
       child: Column(
         children: [
           Container(

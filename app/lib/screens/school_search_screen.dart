@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../data/school.dart';
 import '../data/school_repository.dart';
 import '../theme/app_theme.dart';
+import '../widgets/brand_header.dart';
+import '../widgets/help.dart';
 import '../widgets/school_card.dart';
 import '../widgets/state_views.dart';
 import 'platform_admin_screen.dart';
@@ -86,65 +88,72 @@ class _SchoolSearchScreenState extends State<SchoolSearchScreen> {
   Widget _header() {
     final cs = Theme.of(context).colorScheme;
     final top = MediaQuery.of(context).padding.top;
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, top + 20, 20, 26),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppTheme.green, AppTheme.greenLight],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        GestureDetector(
-          onLongPress: _teamSignIn,
-          behavior: HitTestBehavior.opaque,
-          child: Row(children: [
-            Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.gold, width: 1.5),
+    return Stack(clipBehavior: Clip.none, children: [
+      BrandHeader(
+        illustration: true,
+        padding: EdgeInsets.fromLTRB(22, top + 18, 22, 58),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          GestureDetector(
+            onLongPress: _teamSignIn,
+            behavior: HitTestBehavior.opaque,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.gold, width: 1.5),
+                ),
+                child: const Icon(Icons.school_rounded, color: AppTheme.gold, size: 22),
               ),
-              child: const Icon(Icons.school_rounded, color: AppTheme.gold, size: 24),
+              const SizedBox(width: 12),
+              const Text('MySchool',
+                  style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800)),
+            ]),
+          ),
+          const SizedBox(height: 56),
+          const Text('Find your\nschool',
+              style: TextStyle(
+                  color: Colors.white, fontSize: 34, height: 1.1, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 10),
+          Text('Search by school name or School ID',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.88), fontSize: 15)),
+        ]),
+      ),
+      Positioned(
+        left: 20,
+        right: 20,
+        bottom: -27,
+        child: Material(
+          elevation: 8,
+          shadowColor: Colors.black.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(18),
+          color: cs.surface,
+          child: TextField(
+            controller: _controller,
+            onChanged: _onChanged,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              filled: false,
+              hintText: 'School name or School ID',
+              prefixIcon: const Icon(Icons.search),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              suffixIcon: _controller.text.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        _controller.clear();
+                        _onChanged('');
+                      },
+                    ),
             ),
-            const SizedBox(width: 12),
-            const Text('MySchool',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-          ]),
-        ),
-        const SizedBox(height: 28),
-        const Text('Find your school',
-            style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 6),
-        Text('Search by school name or School ID',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 15)),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _controller,
-          onChanged: _onChanged,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: cs.surface,
-            hintText: 'School name or School ID',
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: _controller.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      _controller.clear();
-                      _onChanged('');
-                    },
-                  ),
           ),
         ),
-      ]),
-    );
+      ),
+    ]);
   }
 
   Widget _howItWorks() {
@@ -174,7 +183,7 @@ class _SchoolSearchScreenState extends State<SchoolSearchScreen> {
         );
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
       children: [
         Text('How it works',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
@@ -185,6 +194,10 @@ class _SchoolSearchScreenState extends State<SchoolSearchScreen> {
             'Students use their admission number and PIN. Parents and staff use their email.'),
         step(Icons.assignment_outlined, 'Stay up to date',
             'See published results and announcements from your school.'),
+        const SizedBox(height: 6),
+        const HintBanner(
+          text: 'Not sure of your School ID? Ask your school office. It is usually short, like ABC-123.',
+        ),
       ],
     );
   }
@@ -208,7 +221,7 @@ class _SchoolSearchScreenState extends State<SchoolSearchScreen> {
       );
     }
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 44, 20, 24),
       itemCount: _results.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, i) =>

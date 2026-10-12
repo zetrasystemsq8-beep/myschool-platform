@@ -16,11 +16,14 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final light = Theme.of(context).brightness == Brightness.light;
     return Material(
-      color: cs.surfaceContainerLow,
+      color: light ? Colors.white : cs.surfaceContainerLow,
+      elevation: light ? 1.5 : 0,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.6)),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: light ? 0.35 : 0.6)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
@@ -57,11 +60,14 @@ class CardShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final light = Theme.of(context).brightness == Brightness.light;
     return Material(
-      color: cs.surfaceContainerLow,
+      color: light ? Colors.white : cs.surfaceContainerLow,
+      elevation: light ? 1.5 : 0,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.6)),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: light ? 0.35 : 0.6)),
       ),
       clipBehavior: Clip.antiAlias,
       child: child,

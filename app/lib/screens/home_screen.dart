@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/brand_header.dart';
+
 import '../data/admin_repository.dart';
 import '../data/models.dart';
 import '../data/portal_repository.dart';
@@ -136,18 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _header() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 26),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppTheme.green, AppTheme.greenLight],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return BrandHeader(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 26),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(_greeting,
             style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),

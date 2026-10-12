@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/brand_header.dart';
+
 import '../data/auth_repository.dart';
 import '../data/school_repository.dart';
 import '../data/setup_repository.dart';
@@ -200,17 +202,8 @@ class _PlatformAdminScreenState extends State<PlatformAdminScreen> {
     final top = MediaQuery.of(context).padding.top;
     return Scaffold(
       body: Column(children: [
-        Container(
-          width: double.infinity,
+        BrandHeader(
           padding: EdgeInsets.fromLTRB(8, top + 4, 8, 28),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppTheme.green, AppTheme.greenLight],
-            ),
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-          ),
           child: Column(children: [
             Align(
               alignment: Alignment.centerLeft,

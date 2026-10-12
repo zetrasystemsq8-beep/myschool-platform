@@ -18,11 +18,13 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
+      scaffoldBackgroundColor:
+          brightness == Brightness.light ? const Color(0xFFF3F6F2) : scheme.surface,
       appBarTheme: AppBarTheme(
         centerTitle: false,
         scrolledUnderElevation: 0,
-        backgroundColor: scheme.surface,
+        backgroundColor:
+            brightness == Brightness.light ? const Color(0xFFF3F6F2) : scheme.surface,
         titleTextStyle: TextStyle(
           color: scheme.onSurface,
           fontSize: 20,
@@ -31,6 +33,10 @@ class AppTheme {
       ),
       snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
       navigationBarTheme: NavigationBarThemeData(
+        height: 68,
+        elevation: 3,
+        backgroundColor: scheme.surface,
+        surfaceTintColor: Colors.transparent,
         indicatorColor: gold.withValues(alpha: 0.30),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
