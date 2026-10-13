@@ -503,3 +503,201 @@ class ClassSummaryRow {
         highest: _num(m['highest']),
       );
 }
+
+// ---------------------------------------------------------------- attendance and fees
+
+String isoDate(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+/// 12500 -> "₦12,500" (NGN) or "USD 12,500".
+String money(num? value, [String currency = 'NGN']) {
+  final v = (value ?? 0).toDouble();
+  final whole = v == v.roundToDouble();
+  final text = (whole ? v.toStringAsFixed(0) : v.toStringAsFixed(2))
+      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',');
+  return currency == 'NGN' ? '₦$text' : '$currency $text';
+}
+
+class AttendanceRecord {
+  const AttendanceRecord({required this.studentId, required this.date, required this.status, this.note});
+
+  final String studentId;
+  final DateTime date;
+  final String status; // present | late | absent
+  final String? note;
+
+  factory AttendanceRecord.fromMap(Map<String, dynamic> m) => AttendanceRecord(
+        studentId: m['student_id'] as String,
+        date: DateTime.parse(m['attendance_date'] as String),
+        status: m['status'] as String,
+        note: m['note'] as String?,
+      );
+
+  String get label => switch (status) {
+        'present' => 'Present',
+        'late' => 'Late',
+        'absent' => 'Absent',
+        _ => status,
+      };
+}
+
+class FeeBalance {
+  const FeeBalance({
+    required this.studentFeeId,
+    required this.studentId,
+    required this.studentName,
+    required this.admissionNumber,
+    required this.title,
+    required this.categoryName,
+    required this.currency,
+    required this.sessionName,
+    required this.amount,
+    required this.paid,
+    required this.balance,
+    required this.status,
+    this.termName,
+    this.dueDate,
+  });
+
+  final String studentFeeId;
+  final String studentId;
+  final String studentName;
+  final String admissionNumber;
+  final String title;
+  final String categoryName;
+  final String currency;
+  final String sessionName;
+  final String? termName;
+  final double amount;
+  final double paid;
+  final double balance;
+  final String status; // paid | part_paid | overdue | unpaid
+  final String? dueDate;
+
+  factory FeeBalance.fromMap(Map<String, dynamic> m) => FeeBalance(
+        studentFeeId: m['student_fee_id'] as String,
+        studentId: m['student_id'] as String,
+        studentName: '${m['first_name'] ?? ''} ${m['last_name'] ?? ''}'.trim(),
+        admissionNumber: (m['admission_number'] as String?) ?? '',
+        title: m['title'] as String,
+        categoryName: (m['category_name'] as String?) ?? '',
+        currency: (m['currency'] as String?) ?? 'NGN',
+        sessionName: (m['session_name'] as String?) ?? '',
+        termName: m['term_name'] as String?,
+        amount: _num(m['amount']) ?? 0,
+        paid: _num(m['paid']) ?? 0,
+        balance: _num(m['balance']) ?? 0,
+        status: m['status'] as String,
+        dueDate: m['due_date'] as String?,
+      );
+
+  String get statusLabel => switch (status) {
+        'paid' => 'Paid',
+        'part_paid' => 'Part paid',
+        'overdue' => 'Overdue',
+        _ => 'Not paid',
+      };
+}
+
+class FeePayment {
+  const FeePayment({
+    required this.id,
+    required this.amount,
+    required this.paidOn,
+    required this.method,
+    required this.source,
+    this.reference,
+    this.note,
+    this.reversedAt,
+    this.reversalReason,
+  });
+
+  final String id;
+  final double amount;
+  final String paidOn;
+  final String method;
+  final String source; // school_recorded | gateway_verified
+  final String? reference;
+  final String? note;
+  final DateTime? reversedAt;
+  final String? reversalReason;
+
+  bool get isReversed => reversedAt != null;
+  bool get isOnline => source == 'gateway_verified';
+
+  factory FeePayment.fromMap(Map<String, dynamic> m) => FeePayment(
+        id: m['id'] as String,
+        amount: _num(m['amount']) ?? 0,
+        paidOn: m['paid_on'] as String,
+        method: m['method'] as String,
+        source: m['source'] as String,
+        reference: m['reference'] as String?,
+        note: m['note'] as String?,
+        reversedAt: DateTime.tryParse((m['reversed_at'] as String?) ?? '')?.toLocal(),
+        reversalReason: m['reversal_reason'] as String?,
+      );
+
+  String get methodLabel => switch (method) {
+        'cash' => 'Cash',
+        'bank_transfer' => 'Bank transfer',
+        'pos' => 'POS',
+        'cheque' => 'Cheque',
+        _ => 'Other',
+      };
+}
+
+class FeeCategory {
+  const FeeCategory({required this.id, required this.name, required this.isActive, this.description});
+
+  final String id;
+  final String name;
+  final bool isActive;
+  final String? description;
+
+  factory FeeCategory.fromMap(Map<String, dynamic> m) => FeeCategory(
+        id: m['id'] as String,
+        name: m['name'] as String,
+        isActive: (m['is_active'] as bool?) ?? true,
+        description: m['description'] as String?,
+      );
+}
+
+class FeeChargeRow {
+  const FeeChargeRow({
+    required this.id,
+    required this.title,
+    required this.amount,
+    required this.currency,
+    required this.categoryName,
+    required this.scope,
+    required this.sessionName,
+    this.termName,
+    this.dueDate,
+  });
+
+  final String id;
+  final String title;
+  final double amount;
+  final String currency;
+  final String categoryName;
+  final String scope; // class name or student name
+  final String sessionName;
+  final String? termName;
+  final String? dueDate;
+
+  factory FeeChargeRow.fromMap(Map<String, dynamic> m) {
+    final cls = (m['classes'] as Map?)?['name'] as String?;
+    final st = m['students'] as Map?;
+    return FeeChargeRow(
+      id: m['id'] as String,
+      title: m['title'] as String,
+      amount: _num(m['amount']) ?? 0,
+      currency: (m['currency'] as String?) ?? 'NGN',
+      categoryName: ((m['fee_categories'] as Map?)?['name'] as String?) ?? '',
+      scope: cls ?? '${st?['first_name'] ?? ''} ${st?['last_name'] ?? ''}'.trim(),
+      sessionName: ((m['academic_sessions'] as Map?)?['name'] as String?) ?? '',
+      termName: (m['terms'] as Map?)?['name'] as String?,
+      dueDate: m['due_date'] as String?,
+    );
+  }
+}

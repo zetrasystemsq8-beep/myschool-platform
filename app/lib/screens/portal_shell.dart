@@ -9,7 +9,11 @@ import '../widgets/help.dart';
 import '../widgets/state_views.dart';
 import 'admin_announcements_screen.dart';
 import 'admin_review_screen.dart';
+import 'admin_fees_screen.dart';
 import 'announcements_screen.dart';
+import 'attendance_screen.dart';
+import 'attendance_view_screen.dart';
+import 'fees_screen.dart';
 import '../data/notification_repository.dart';
 import 'home_screen.dart';
 import 'notifications_screen.dart';
@@ -29,9 +33,11 @@ typedef _Tab = ({
 });
 
 /// Signed-in area. Every role starts on Home.
-///   Student / parent:  Home, Results, Notices, Profile
-///   Teacher:           Home, Classes, Notices, Account
-///   School admin:      Home, Approvals, My school, Notices, Account
+///   Student:       Home, Results, Attendance, Notices
+///   Parent:        Home, Results, Attendance, Fees, Notices
+///   Teacher:       Home, Classes, Attendance, Notices
+///   School admin:  Home, Approvals, Fees, My school, Notices
+/// Everyone: bell (notifications), profile icon, and a "?" help button in the top bar.
 class PortalShell extends StatefulWidget {
   const PortalShell({super.key, required this.school, required this.member});
 
@@ -184,6 +190,40 @@ class _PortalShellState extends State<PortalShell> {
             ],
           ),
         ),
+      if (withResults)
+        (
+          id: 'attendance',
+          title: 'Attendance',
+          nav: 'Attendance',
+          icon: Icons.event_available_outlined,
+          iconOn: Icons.event_available,
+          page: AttendanceViewScreen(key: ValueKey('a-${_current?.id}'), student: _current),
+          help: const HelpButton(
+            title: 'Attendance',
+            steps: [
+              'This shows the days your child was present, late or absent.',
+              'Use the arrows at the top to look at other months.',
+              '"Attended" counts present and late days together.',
+            ],
+          ),
+        ),
+      if (member.isParent)
+        (
+          id: 'fees',
+          title: 'School fees',
+          nav: 'Fees',
+          icon: Icons.receipt_long_outlined,
+          iconOn: Icons.receipt_long,
+          page: FeesScreen(key: ValueKey('f-${_current?.id}'), student: _current),
+          help: const HelpButton(
+            title: 'School fees',
+            steps: [
+              'Each card is a fee set by the school, with what was paid and what is still owed.',
+              'Tap a card to see every payment.',
+              'The school office records payments when money is received. Keep your receipt.',
+            ],
+          ),
+        ),
       if (isTeacher)
         (
           id: 'classes',
@@ -198,6 +238,23 @@ class _PortalShellState extends State<PortalShell> {
               'These are the classes and subjects your administrator gave you.',
               'Tap one and choose the term. Then type each student\'s scores.',
               'Tap "Send for approval" when everyone has a score.',
+            ],
+          ),
+        ),
+      if (isTeacher)
+        (
+          id: 'attendance',
+          title: 'Attendance',
+          nav: 'Attendance',
+          icon: Icons.event_available_outlined,
+          iconOn: Icons.event_available,
+          page: AttendanceScreen(school: widget.school, isAdmin: false),
+          help: const HelpButton(
+            title: 'Attendance',
+            steps: [
+              'Pick a class at the top. "Mark attendance" lists the students for the day.',
+              'Everyone starts as Present. Change anyone who is Late or Absent, then tap Save.',
+              'You can mark today and the last 7 days. Open "Records" to see a month.',
             ],
           ),
         ),
@@ -218,6 +275,16 @@ class _PortalShellState extends State<PortalShell> {
               'After approving, tap "Share results" so students and parents can see them.',
             ],
           ),
+        ),
+      if (isAdmin)
+        (
+          id: 'fees',
+          title: 'School fees',
+          nav: 'Fees',
+          icon: Icons.payments_outlined,
+          iconOn: Icons.payments,
+          page: AdminFeesScreen(school: widget.school),
+          help: adminFeesHelp,
         ),
       if (isAdmin)
         (
@@ -257,27 +324,6 @@ class _PortalShellState extends State<PortalShell> {
                   'Notices from your school appear here, newest first.',
                   'Tap one to read all of it. Pull down to refresh.',
                 ],
-        ),
-      ),
-      (
-        id: 'profile',
-        title: withResults ? 'Profile' : 'Account',
-        nav: withResults ? 'Profile' : 'Account',
-        icon: Icons.person_outline,
-        iconOn: Icons.person,
-        page: ProfileScreen(
-          key: ValueKey('p-${_current?.id}'),
-          school: widget.school,
-          member: member,
-          student: _current,
-        ),
-        help: const HelpButton(
-          title: 'Your profile',
-          steps: [
-            'See your details and your school.',
-            'Choose Light, Dark or Auto appearance.',
-            'Change your password or PIN here. Tap "Sign out" when you are done.',
-          ],
         ),
       ),
     ];
@@ -320,6 +366,32 @@ class _PortalShellState extends State<PortalShell> {
                 _refreshUnread();
                 if (target != null) goTo(target);
               },
+            ),
+            IconButton(
+              tooltip: 'Profile',
+              icon: const Icon(Icons.account_circle_outlined),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Profile'),
+                    actions: const [
+                      HelpButton(
+                        title: 'Your profile',
+                        steps: [
+                          'See your details and your school.',
+                          'Choose Light, Dark or Auto appearance.',
+                          'Change your password or PIN here. Tap "Sign out" when you are done.',
+                        ],
+                      ),
+                    ],
+                  ),
+                  body: ProfileScreen(
+                    school: widget.school,
+                    member: member,
+                    student: _current,
+                  ),
+                ),
+              )),
             ),
             if (current.help != null) current.help!,
           ],

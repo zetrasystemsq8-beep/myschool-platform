@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/school.dart';
 import '../widgets/app_card.dart';
+import 'attendance_screen.dart';
 import 'classes_subjects_screen.dart';
 import 'people_screen.dart';
 import 'sessions_screen.dart';
@@ -56,6 +57,14 @@ class SetupHubScreen extends StatelessWidget {
             ClassesSubjectsScreen(school: school)),
         tile(3, Icons.groups_outlined, 'People', 'Add students, teachers and parents',
             PeopleScreen(school: school)),
+        const SizedBox(height: 8),
+        Text('Day to day', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        tile(4, Icons.event_available_outlined, 'Attendance', 'See and correct attendance for any class',
+            Scaffold(
+              appBar: AppBar(title: const Text('Attendance')),
+              body: AttendanceScreen(school: school, isAdmin: true),
+            )),
       ],
     );
   }
