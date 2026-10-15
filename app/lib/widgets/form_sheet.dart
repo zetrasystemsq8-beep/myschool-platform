@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/school_repository.dart';
 
-enum FieldKind { text, password, multiline, choice, date, toggle }
+enum FieldKind { text, password, multiline, choice, date, time, toggle }
 
 /// Describes one input of a form; [FormSheet] builds the widgets and keeps the values.
 class FieldSpec {
@@ -95,6 +95,7 @@ class _FormSheetState extends State<_FormSheet> {
           _ctl[f.key] = TextEditingController(text: f.initial ?? '');
         case FieldKind.choice:
         case FieldKind.date:
+        case FieldKind.time:
           _vals[f.key] = f.initial ?? '';
         case FieldKind.toggle:
           _vals[f.key] = f.initial ?? 'false';
@@ -122,6 +123,17 @@ class _FormSheetState extends State<_FormSheet> {
     );
     if (picked != null) {
       setState(() => _vals[f.key] = '${picked.year}-${_two(picked.month)}-${_two(picked.day)}');
+    }
+  }
+
+  Future<void> _pickTime(FieldSpec f) async {
+    final parts = (_vals[f.key] ?? '').split(':');
+    final initial = parts.length == 2
+        ? TimeOfDay(hour: int.tryParse(parts[0]) ?? 9, minute: int.tryParse(parts[1]) ?? 0)
+        : const TimeOfDay(hour: 9, minute: 0);
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked != null) {
+      setState(() => _vals[f.key] = '${_two(picked.hour)}:${_two(picked.minute)}');
     }
   }
 
@@ -236,6 +248,20 @@ class _FormSheetState extends State<_FormSheet> {
             ),
             child: Text(v.isEmpty ? 'Tap to pick a date' : v,
                 style: v.isEmpty ? TextStyle(color: theme.colorScheme.onSurfaceVariant) : null),
+          ),
+        );
+      case FieldKind.time:
+        final t = _vals[f.key] ?? '';
+        return InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: _busy ? null : () => _pickTime(f),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: f.required ? '${f.label} *' : f.label,
+              suffixIcon: const Icon(Icons.schedule, size: 20),
+            ),
+            child: Text(t.isEmpty ? 'Tap to pick a time' : t,
+                style: t.isEmpty ? TextStyle(color: theme.colorScheme.onSurfaceVariant) : null),
           ),
         );
       case FieldKind.toggle:

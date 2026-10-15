@@ -701,3 +701,207 @@ class FeeChargeRow {
     );
   }
 }
+
+// ---------------------------------------------------------------- messaging and meetings
+
+String formatTime(DateTime? d) =>
+    d == null ? '' : '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+
+class ThreadSummary {
+  const ThreadSummary({
+    required this.threadId,
+    required this.studentName,
+    required this.otherName,
+    required this.otherRole,
+    required this.status,
+    required this.unread,
+    this.subject,
+    this.lastBody,
+    this.lastMessageAt,
+  });
+
+  final String threadId;
+  final String studentName;
+  final String otherName;
+  final String otherRole; // teacher | parent
+  final String status; // open | closed
+  final int unread;
+  final String? subject;
+  final String? lastBody;
+  final DateTime? lastMessageAt;
+
+  bool get isClosed => status == 'closed';
+
+  factory ThreadSummary.fromMap(Map<String, dynamic> m) => ThreadSummary(
+        threadId: m['thread_id'] as String,
+        studentName: (m['student_name'] as String?) ?? '',
+        otherName: (m['other_name'] as String?) ?? '',
+        otherRole: (m['other_role'] as String?) ?? '',
+        status: (m['status'] as String?) ?? 'open',
+        unread: (m['unread'] as num?)?.toInt() ?? 0,
+        subject: m['subject'] as String?,
+        lastBody: m['last_body'] as String?,
+        lastMessageAt: DateTime.tryParse((m['last_message_at'] as String?) ?? '')?.toLocal(),
+      );
+}
+
+class ChatMessage {
+  const ChatMessage({required this.id, required this.senderId, required this.body, this.createdAt});
+
+  final String id;
+  final String senderId;
+  final String body;
+  final DateTime? createdAt;
+
+  factory ChatMessage.fromMap(Map<String, dynamic> m) => ChatMessage(
+        id: m['id'] as String,
+        senderId: m['sender_id'] as String,
+        body: m['body'] as String,
+        createdAt: DateTime.tryParse((m['created_at'] as String?) ?? '')?.toLocal(),
+      );
+}
+
+/// Someone the signed-in parent/teacher is allowed to start a conversation with.
+class MessageContact {
+  const MessageContact({
+    required this.studentId,
+    required this.studentName,
+    required this.otherUserId,
+    required this.otherName,
+    required this.detail,
+  });
+
+  final String studentId;
+  final String studentName;
+  final String otherUserId;
+  final String otherName;
+  final String detail;
+
+  factory MessageContact.fromMap(Map<String, dynamic> m) => MessageContact(
+        studentId: m['student_id'] as String,
+        studentName: (m['student_name'] as String?) ?? '',
+        otherUserId: m['other_user_id'] as String,
+        otherName: (m['other_name'] as String?) ?? '',
+        detail: (m['detail'] as String?) ?? '',
+      );
+}
+
+class MessageReportRow {
+  const MessageReportRow({
+    required this.id,
+    required this.status,
+    required this.reason,
+    required this.threadId,
+    required this.messageBody,
+    required this.senderId,
+    required this.senderName,
+    required this.reporterName,
+    required this.studentName,
+    required this.parentName,
+    required this.teacherName,
+    this.createdAt,
+    this.resolutionNote,
+  });
+
+  final String id;
+  final String status;
+  final String reason;
+  final String threadId;
+  final String messageBody;
+  final String senderId;
+  final String senderName;
+  final String reporterName;
+  final String studentName;
+  final String parentName;
+  final String teacherName;
+  final DateTime? createdAt;
+  final String? resolutionNote;
+
+  factory MessageReportRow.fromMap(Map<String, dynamic> m) => MessageReportRow(
+        id: m['report_id'] as String,
+        status: m['status'] as String,
+        reason: m['reason'] as String,
+        threadId: m['thread_id'] as String,
+        messageBody: (m['message_body'] as String?) ?? '',
+        senderId: m['sender_id'] as String,
+        senderName: (m['sender_name'] as String?) ?? '',
+        reporterName: (m['reporter_name'] as String?) ?? '',
+        studentName: (m['student_name'] as String?) ?? '',
+        parentName: (m['parent_name'] as String?) ?? '',
+        teacherName: (m['teacher_name'] as String?) ?? '',
+        createdAt: DateTime.tryParse((m['created_at'] as String?) ?? '')?.toLocal(),
+        resolutionNote: m['resolution_note'] as String?,
+      );
+}
+
+class BlockedUser {
+  const BlockedUser({required this.userId, required this.name, this.reason});
+
+  final String userId;
+  final String name;
+  final String? reason;
+
+  factory BlockedUser.fromMap(Map<String, dynamic> m) => BlockedUser(
+        userId: m['user_id'] as String,
+        name: ((m['profiles'] as Map?)?['full_name'] as String?)?.trim().isNotEmpty == true
+            ? (m['profiles'] as Map)['full_name'] as String
+            : 'Unnamed',
+        reason: m['reason'] as String?,
+      );
+}
+
+class MeetingItem {
+  const MeetingItem({
+    required this.id,
+    required this.title,
+    required this.startsAt,
+    required this.endsAt,
+    required this.status,
+    this.description,
+    this.location,
+    this.classId,
+    this.className,
+  });
+
+  final String id;
+  final String title;
+  final DateTime startsAt;
+  final DateTime endsAt;
+  final String status; // scheduled | cancelled
+  final String? description;
+  final String? location;
+  final String? classId;
+  final String? className;
+
+  bool get isCancelled => status == 'cancelled';
+  bool get isOver => endsAt.isBefore(DateTime.now());
+
+  String get whenLabel =>
+      '${formatDate(startsAt)}  ·  ${formatTime(startsAt)} to ${formatTime(endsAt)}';
+
+  factory MeetingItem.fromMap(Map<String, dynamic> m) => MeetingItem(
+        id: m['id'] as String,
+        title: m['title'] as String,
+        startsAt: DateTime.parse(m['starts_at'] as String).toLocal(),
+        endsAt: DateTime.parse(m['ends_at'] as String).toLocal(),
+        status: m['status'] as String,
+        description: m['description'] as String?,
+        location: m['location'] as String?,
+        classId: m['class_id'] as String?,
+        className: (m['classes'] as Map?)?['name'] as String?,
+      );
+}
+
+class RsvpRow {
+  const RsvpRow({required this.parentName, required this.response, this.note});
+
+  final String parentName;
+  final String response; // attending | not_attending | no_response
+  final String? note;
+
+  factory RsvpRow.fromMap(Map<String, dynamic> m) => RsvpRow(
+        parentName: (m['parent_name'] as String?) ?? 'Unnamed',
+        response: (m['response'] as String?) ?? 'no_response',
+        note: m['note'] as String?,
+      );
+}

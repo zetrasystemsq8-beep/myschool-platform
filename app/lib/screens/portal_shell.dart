@@ -11,6 +11,10 @@ import 'admin_announcements_screen.dart';
 import 'admin_review_screen.dart';
 import 'admin_fees_screen.dart';
 import 'announcements_screen.dart';
+import 'meetings_screen.dart';
+import 'message_moderation_screen.dart';
+import 'messages_screen.dart';
+import 'more_screen.dart';
 import 'attendance_screen.dart';
 import 'attendance_view_screen.dart';
 import 'fees_screen.dart';
@@ -123,11 +127,98 @@ class _PortalShellState extends State<PortalShell> {
       );
     }
 
+    // Screens that live under "More" (opened on top of the tabs).
+    Widget? extraPage(String id) {
+      switch (id) {
+        case 'notices':
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Notices'),
+              actions: [
+                HelpButton(
+                  title: 'Notices',
+                  steps: isAdmin
+                      ? const [
+                          'Tap "New" to write a notice for your school.',
+                          'Choose who should see it, and a class if it is only for one class.',
+                          '"Draft" is only visible to you. "Published" notifies the people you chose.',
+                        ]
+                      : const [
+                          'Notices from your school appear here, newest first.',
+                          'Tap one to read all of it. Pull down to refresh.',
+                        ],
+                ),
+              ],
+            ),
+            body: isAdmin
+                ? AdminAnnouncementsScreen(schoolId: widget.school.id)
+                : AnnouncementsScreen(schoolId: widget.school.id),
+          );
+        case 'meetings':
+          return MeetingsScreen(school: widget.school, member: member);
+        case 'messages':
+          return MessagesScreen(school: widget.school, isParent: member.isParent);
+        case 'moderation':
+          return MessageModerationScreen(school: widget.school);
+        case 'profile':
+          return Scaffold(
+            appBar: AppBar(title: const Text('Profile')),
+            body: ProfileScreen(school: widget.school, member: member, student: _current),
+          );
+      }
+      return null;
+    }
+
+    void openExtra(String id) {
+      final page = extraPage(id);
+      if (page != null) Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    }
+
     late final List<_Tab> tabs;
     void goTo(String id) {
       final i = tabs.indexWhere((t) => t.id == id);
-      if (i >= 0) setState(() => _tab = i);
+      if (i >= 0) {
+        setState(() => _tab = i);
+      } else {
+        openExtra(id);
+      }
     }
+
+    final moreItems = <MoreItem>[
+      MoreItem(
+        icon: Icons.campaign_outlined,
+        title: 'Notices',
+        subtitle: isAdmin ? 'Write and manage notices' : 'News from your school',
+        onTap: () => openExtra('notices'),
+      ),
+      if (!member.hasStudentView || member.isParent)
+        MoreItem(
+          icon: Icons.groups_outlined,
+          title: 'Meetings',
+          subtitle: isAdmin ? 'Schedule parent-teacher meetings' : 'Parent-teacher meetings',
+          onTap: () => openExtra('meetings'),
+        ),
+      if (member.isParent || isTeacher)
+        MoreItem(
+          icon: Icons.forum_outlined,
+          title: 'Messages',
+          subtitle: member.isParent ? 'Write privately to your child\'s teachers' : 'Write privately to parents',
+          onTap: () => openExtra('messages'),
+        ),
+      if (isAdmin)
+        MoreItem(
+          icon: Icons.shield_outlined,
+          title: 'Message moderation',
+          subtitle: 'Reported messages and muted people',
+          onTap: () => openExtra('moderation'),
+        ),
+      MoreItem(
+        icon: Icons.account_circle_outlined,
+        title: 'Profile',
+        subtitle: 'Your details, appearance and password',
+        onTap: () => openExtra('profile'),
+      ),
+    ];
 
     final homeHelp = withResults
         ? const HelpButton(
@@ -304,26 +395,18 @@ class _PortalShellState extends State<PortalShell> {
           ),
         ),
       (
-        id: 'notices',
-        title: 'Notices',
-        nav: 'Notices',
-        icon: Icons.campaign_outlined,
-        iconOn: Icons.campaign,
-        page: isAdmin
-            ? AdminAnnouncementsScreen(schoolId: widget.school.id)
-            : AnnouncementsScreen(schoolId: widget.school.id),
-        help: HelpButton(
-          title: 'Notices',
-          steps: isAdmin
-              ? const [
-                  'Tap "New" to write a notice for your school.',
-                  'Choose who should see it: everyone, students, parents or staff.',
-                  '"Draft" is only visible to you. "Published" is visible to the people you chose.',
-                ]
-              : const [
-                  'Notices from your school appear here, newest first.',
-                  'Tap one to read all of it. Pull down to refresh.',
-                ],
+        id: 'more',
+        title: 'More',
+        nav: 'More',
+        icon: Icons.apps_outlined,
+        iconOn: Icons.apps,
+        page: MoreScreen(items: moreItems),
+        help: const HelpButton(
+          title: 'More',
+          steps: [
+            'Notices, meetings, messages and your profile are here.',
+            'Your profile is also under the person icon at the top.',
+          ],
         ),
       ),
     ];

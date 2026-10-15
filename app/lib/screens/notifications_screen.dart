@@ -61,7 +61,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
     }
     if (!mounted) return;
-    if (n.kind == 'announcement') Navigator.pop(context, 'notices');
+    final target = switch (n.kind) {
+      'announcement' => 'notices',
+      'meeting' => 'meetings',
+      'message' => 'messages',
+      'message_report' => 'moderation',
+      _ => null,
+    };
+    if (target != null) Navigator.pop(context, target);
   }
 
   Future<void> _markAll() async {

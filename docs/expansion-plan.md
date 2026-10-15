@@ -7,7 +7,7 @@ Extends the existing system; nothing is rebuilt. Same schemas (`myschool`, `ms_p
 |---|---|---|
 | 1 | Notifications (+ class-specific notices), report cards (print/PDF), academic progress (student + class level) | **Written, awaiting CI + manual check** (migration 10, test file 02, app screens) |
 | 2 | Attendance, fees (school-recorded payments; gateway-verified payments kept separate and not faked) | **Written, awaiting CI + manual check** (migrations 11-12, tests 03-04, app screens) |
-| 3 | Parent-teacher messaging (admin-moderated), meetings with RSVP and notifications | Not started |
+| 3 | Parent-teacher messaging (admin-moderated), meetings with RSVP and notifications | **Written, awaiting CI + manual check** (migrations 13-14, tests 05-06, app screens) |
 
 ## Group 1 details
 - **Migration `20260101000010`**: `announcements.class_id`; `ms_private.announcement_recipients/visible`; `notifications`
@@ -32,3 +32,16 @@ Extends the existing system; nothing is rebuilt. Same schemas (`myschool`, `ms_p
 - **App**: attendance tab (teacher: mark + monthly records; admin: via My school; parent/student: monthly view), fees tab (parent: due/paid/owed + history;
   admin: who owes, fees, fee types, record/reverse payment). Profile moved to a top-bar icon to make room for the new tabs.
 - **Not included**: online payment, receipts as PDF, fee waivers/discounts, attendance/fee notifications (kept off to avoid noise), per-subject attendance.
+
+## Group 3 details
+- **Messaging (migration 13)**: one private conversation per (student, parent, teacher). Allowed only when the parent is linked to the student
+  and the teacher teaches the student's class in the current school year (checked when starting AND on every send). No direct writes: everything goes
+  through `start_message_thread`, `send_message`, `mark_thread_read`, `report_message`. Admins cannot browse conversations; a conversation becomes readable
+  to the school's admins only after someone reports it. Admins can resolve reports (optionally closing the conversation), mute a person, and switch
+  messaging off for the school (`school_settings.messaging_enabled`). Limit: 30 messages per person per hour, 2000 characters each.
+  One notification per conversation until read (no message text in notifications).
+- **Meetings (migration 14)**: admins schedule (direct insert/update under RLS, audited); visible to parents of the class (or all parents) and the teachers
+  concerned; parents RSVP through `respond_to_meeting` (not for cancelled or finished meetings); admins see answers via `meeting_rsvp_report`.
+  New / changed / cancelled meetings notify the people concerned (one notification per meeting until read).
+- **App**: bottom bar is now Home + role tabs + **More** (Notices, Meetings, Messages, Message moderation, Profile).
+- **Not included**: push notifications, attachments in messages, group chats, meeting reminders before the date.
