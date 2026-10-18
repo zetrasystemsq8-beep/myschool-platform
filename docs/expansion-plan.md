@@ -45,3 +45,10 @@ Extends the existing system; nothing is rebuilt. Same schemas (`myschool`, `ms_p
   New / changed / cancelled meetings notify the people concerned (one notification per meeting until read).
 - **App**: bottom bar is now Home + role tabs + **More** (Notices, Meetings, Messages, Message moderation, Profile).
 - **Not included**: push notifications, attachments in messages, group chats, meeting reminders before the date.
+
+## Feature 1 of the final list: school profile and settings
+- **App**: My school > School profile & settings: logo upload (public bucket, this school's admin only), school details, test/exam split
+  (always totals 100), grading scale editor (keep one grade from 0), "a different person must approve" switch. The updated name/logo refreshes
+  everywhere without restarting.
+- **Migration 15**: audits profile changes and makes them visible to that school's admins. Tests: `07_school_settings.test.sql`.
+- Existing results keep their saved totals and grades when the split or the scale changes.

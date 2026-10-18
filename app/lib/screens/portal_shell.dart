@@ -59,10 +59,11 @@ class _PortalShellState extends State<PortalShell> {
   bool _loading = true;
   String? _error;
   int _unread = 0;
+  late School _school = widget.school;
 
   Future<void> _refreshUnread() async {
     try {
-      final n = await NotificationRepository.instance.unreadCount(widget.school.id);
+      final n = await NotificationRepository.instance.unreadCount(_school.id);
       if (mounted) setState(() => _unread = n);
     } catch (_) {
       // The bell simply shows no badge if this fails.
@@ -85,10 +86,10 @@ class _PortalShellState extends State<PortalShell> {
       final repo = PortalRepository.instance;
       List<StudentInfo> list = const [];
       if (widget.member.isStudent) {
-        final s = await repo.myStudentRecord(uid, widget.school.id);
+        final s = await repo.myStudentRecord(uid, _school.id);
         list = s == null ? const [] : [s];
       } else if (widget.member.isParent) {
-        list = await repo.children(uid, widget.school.id);
+        list = await repo.children(uid, _school.id);
       }
       if (!mounted) return;
       setState(() {
@@ -151,19 +152,19 @@ class _PortalShellState extends State<PortalShell> {
               ],
             ),
             body: isAdmin
-                ? AdminAnnouncementsScreen(schoolId: widget.school.id)
-                : AnnouncementsScreen(schoolId: widget.school.id),
+                ? AdminAnnouncementsScreen(schoolId: _school.id)
+                : AnnouncementsScreen(schoolId: _school.id),
           );
         case 'meetings':
-          return MeetingsScreen(school: widget.school, member: member);
+          return MeetingsScreen(school: _school, member: member);
         case 'messages':
-          return MessagesScreen(school: widget.school, isParent: member.isParent);
+          return MessagesScreen(school: _school, isParent: member.isParent);
         case 'moderation':
-          return MessageModerationScreen(school: widget.school);
+          return MessageModerationScreen(school: _school);
         case 'profile':
           return Scaffold(
             appBar: AppBar(title: const Text('Profile')),
-            body: ProfileScreen(school: widget.school, member: member, student: _current),
+            body: ProfileScreen(school: _school, member: member, student: _current),
           );
       }
       return null;
@@ -250,13 +251,13 @@ class _PortalShellState extends State<PortalShell> {
     tabs = <_Tab>[
       (
         id: 'home',
-        title: widget.school.name,
+        title: _school.name,
         nav: 'Home',
         icon: Icons.home_outlined,
         iconOn: Icons.home,
         page: HomeScreen(
           key: ValueKey('h-${_current?.id}'),
-          school: widget.school,
+          school: _school,
           member: member,
           student: _current,
           active: _tab == 0,
@@ -271,7 +272,7 @@ class _PortalShellState extends State<PortalShell> {
           nav: 'Results',
           icon: Icons.assignment_outlined,
           iconOn: Icons.assignment,
-          page: ResultsScreen(key: ValueKey('r-${_current?.id}'), student: _current, school: widget.school),
+          page: ResultsScreen(key: ValueKey('r-${_current?.id}'), student: _current, school: _school),
           help: const HelpButton(
             title: 'Your results',
             steps: [
@@ -322,7 +323,7 @@ class _PortalShellState extends State<PortalShell> {
           nav: 'Classes',
           icon: Icons.class_outlined,
           iconOn: Icons.class_,
-          page: TeacherHomeScreen(school: widget.school),
+          page: TeacherHomeScreen(school: _school),
           help: const HelpButton(
             title: 'My classes',
             steps: [
@@ -339,7 +340,7 @@ class _PortalShellState extends State<PortalShell> {
           nav: 'Attendance',
           icon: Icons.event_available_outlined,
           iconOn: Icons.event_available,
-          page: AttendanceScreen(school: widget.school, isAdmin: false),
+          page: AttendanceScreen(school: _school, isAdmin: false),
           help: const HelpButton(
             title: 'Attendance',
             steps: [
@@ -356,7 +357,7 @@ class _PortalShellState extends State<PortalShell> {
           nav: 'Approvals',
           icon: Icons.fact_check_outlined,
           iconOn: Icons.fact_check,
-          page: AdminReviewScreen(school: widget.school),
+          page: AdminReviewScreen(school: _school),
           help: const HelpButton(
             title: 'Approvals',
             intro: 'Teachers send their results here. Students and parents see nothing until you share them.',
@@ -374,7 +375,7 @@ class _PortalShellState extends State<PortalShell> {
           nav: 'Fees',
           icon: Icons.payments_outlined,
           iconOn: Icons.payments,
-          page: AdminFeesScreen(school: widget.school),
+          page: AdminFeesScreen(school: _school),
           help: adminFeesHelp,
         ),
       if (isAdmin)
@@ -384,7 +385,10 @@ class _PortalShellState extends State<PortalShell> {
           nav: 'My school',
           icon: Icons.settings_outlined,
           iconOn: Icons.settings,
-          page: SetupHubScreen(school: widget.school),
+          page: SetupHubScreen(
+            school: _school,
+            onSchoolChanged: (s) => setState(() => _school = s),
+          ),
           help: const HelpButton(
             title: 'My school',
             steps: [
@@ -444,7 +448,7 @@ class _PortalShellState extends State<PortalShell> {
               ),
               onPressed: () async {
                 final target = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(builder: (_) => NotificationsScreen(school: widget.school)),
+                  MaterialPageRoute(builder: (_) => NotificationsScreen(school: _school)),
                 );
                 _refreshUnread();
                 if (target != null) goTo(target);
@@ -469,7 +473,7 @@ class _PortalShellState extends State<PortalShell> {
                     ],
                   ),
                   body: ProfileScreen(
-                    school: widget.school,
+                    school: _school,
                     member: member,
                     student: _current,
                   ),
