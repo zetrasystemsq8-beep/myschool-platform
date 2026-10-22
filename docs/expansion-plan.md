@@ -52,3 +52,12 @@ Extends the existing system; nothing is rebuilt. Same schemas (`myschool`, `ms_p
   everywhere without restarting.
 - **Migration 15**: audits profile changes and makes them visible to that school's admins. Tests: `07_school_settings.test.sql`.
 - Existing results keep their saved totals and grades when the split or the scale changes.
+
+## Features 2 and 3 of the final list: new school year, student status, spreadsheet import
+- **Migrations 16-17**: new student status `transferred`; `set_student_status` (sign-in follows status, leavers drop off class lists, graduates keep access
+  to old results); `promote_class` (per class: move up / repeat / graduate, safe to re-run); `copy_teaching_assignments`. All admin-only and audited.
+  Tests: `08_promotion.test.sql`.
+- **App (My school)**: "New school year" (from/to year, destination per class with a suggested next class, repeaters, keep teachers, make current),
+  "Import students" (CSV file or pasted text; checks classes, duplicates, PIN and email rules; generates PINs/passwords; printable login list), and
+  "Change status" on a student.
+- **Import limits**: 300 rows per import; a parent email that already has an account must be linked manually; logins are shown once and never stored.

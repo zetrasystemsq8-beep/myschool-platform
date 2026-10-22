@@ -320,4 +320,54 @@ class SetupRepository {
   Future<void> deleteAssignment(String id) async {
     await _db.from('teaching_assignments').delete().eq('id', id);
   }
+
+  // ------------------------------------------------------------ new school year and student status
+
+  /// Active students per class in a school year: classId -> count.
+  Future<Map<String, int>> activeCounts(String sessionId) async {
+    final rows = await _db.from('enrollments').select('class_id').eq('session_id', sessionId).eq('status', 'active');
+    final counts = <String, int>{};
+    for (final r in rows) {
+      final id = r['class_id'] as String;
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  /// toClassId null = the class graduates. Returns {promoted, repeated, graduated, skipped}.
+  Future<Map<String, int>> promoteClass({
+    required String fromSession,
+    required String toSession,
+    required String fromClass,
+    String? toClass,
+    List<String> repeaters = const [],
+  }) async {
+    final r = await _db.rpc('promote_class', params: {
+      'p_from_session': fromSession,
+      'p_to_session': toSession,
+      'p_from_class': fromClass,
+      'p_to_class': toClass,
+      'p_repeat': repeaters,
+    });
+    final m = Map<String, dynamic>.from(r as Map);
+    return {for (final e in m.entries) e.key: (e.value as num).toInt()};
+  }
+
+  Future<int> copyAssignments(String fromSession, String toSession) async {
+    final n = await _db.rpc('copy_teaching_assignments', params: {'p_from_session': fromSession, 'p_to_session': toSession});
+    return (n as num?)?.toInt() ?? 0;
+  }
+
+  Future<void> setStudentStatus(String studentId, String status, String? reason) async {
+    await _db.rpc('set_student_status', params: {'p_student': studentId, 'p_status': status, 'p_reason': reason});
+  }
+
+  /// Links an existing parent account to another child (admin only, enforced by the database).
+  Future<void> linkParent(String schoolId, String parentUserId, String studentId) async {
+    await _db.from('parent_students').insert({
+      'school_id': schoolId,
+      'parent_user_id': parentUserId,
+      'student_id': studentId,
+    });
+  }
 }

@@ -244,6 +244,36 @@ class _StudentsTab extends StatelessWidget {
     }
   }
 
+  Future<void> _changeStatus(BuildContext context, StudentRow s, Future<void> Function() reload) async {
+    final ok = await showFormSheet(
+      context,
+      title: 'Change status',
+      subtitle: s.name,
+      submitLabel: 'Save',
+      fields: [
+        FieldSpec('status', 'Status', kind: FieldKind.choice, required: true, initial: s.status, options: const [
+          ('active', 'Active'),
+          ('graduated', 'Graduated (can still see old results)'),
+          ('withdrawn', 'Withdrawn (left the school)'),
+          ('transferred', 'Transferred to another school'),
+          ('suspended', 'Suspended (cannot sign in)'),
+        ]),
+        const FieldSpec('reason', 'Reason (optional)'),
+      ],
+      onSubmit: (v) async {
+        try {
+          await SetupRepository.instance.setStudentStatus(s.id, v['status']!, v['reason']!.isEmpty ? null : v['reason']);
+        } catch (e) {
+          throw FormError(friendlyError(e));
+        }
+      },
+    );
+    if (ok == true) {
+      if (context.mounted) notify(context, 'Status updated for ${s.name}.');
+      await reload();
+    }
+  }
+
   Future<void> _actions(BuildContext context, StudentRow s, Future<void> Function() reload) async {
     final choice = await showModalBottomSheet<String>(
       context: context,
@@ -267,6 +297,11 @@ class _StudentsTab extends StatelessWidget {
             title: const Text('Report card'),
             onTap: () => Navigator.pop(ctx, 'card'),
           ),
+          ListTile(
+            leading: const Icon(Icons.swap_horiz),
+            title: const Text('Change status (graduated, left the school ...)'),
+            onTap: () => Navigator.pop(ctx, 'status'),
+          ),
           if (s.userId != null)
             ListTile(
               leading: const Icon(Icons.lock_reset),
@@ -281,6 +316,7 @@ class _StudentsTab extends StatelessWidget {
     if (choice == 'enroll') await _enroll(context, s, reload);
     if (choice == 'pin') await _resetPin(context, s);
     if (choice == 'card') await _reportCard(context, s);
+    if (choice == 'status') await _changeStatus(context, s, reload);
   }
 
   @override

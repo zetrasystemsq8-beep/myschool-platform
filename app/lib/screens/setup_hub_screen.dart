@@ -4,6 +4,8 @@ import '../data/school.dart';
 import '../widgets/app_card.dart';
 import 'attendance_screen.dart';
 import 'classes_subjects_screen.dart';
+import 'import_students_screen.dart';
+import 'new_school_year_screen.dart';
 import 'people_screen.dart';
 import 'school_settings_screen.dart';
 import 'sessions_screen.dart';
@@ -70,6 +72,10 @@ class SetupHubScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text('Day to day', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
+        tile(0, Icons.trending_up, 'New school year', 'Move classes up, graduate, keep teachers',
+            NewSchoolYearScreen(school: school)),
+        tile(0, Icons.upload_file_outlined, 'Import students', 'Add many students and parents from a spreadsheet',
+            ImportStudentsScreen(school: school)),
         tile(0, Icons.event_available_outlined, 'Attendance', 'See and correct attendance for any class',
             Scaffold(
               appBar: AppBar(title: const Text('Attendance')),
