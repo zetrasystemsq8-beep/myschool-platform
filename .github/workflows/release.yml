@@ -1,0 +1,71 @@
+name: release-android
+# Manual: Actions -> release-android -> Run workflow.
+# Builds a SIGNED app bundle (.aab, for Google Play) and a signed .apk.
+# Needs these repository secrets (Settings -> Secrets and variables -> Actions):
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android scaffolding
+        run: |
+          cp -r lib /tmp/lib_src && cp pubspec.yaml /tmp/pubspec.yaml && cp -r assets /tmp/assets_src
+          flutter create --platforms=android --org com.myschool --project-name myschool_app .
+          rm -rf lib test analysis_options.yaml
+          cp -r /tmp/lib_src lib && cp /tmp/pubspec.yaml pubspec.yaml && mkdir -p assets && cp -r /tmp/assets_src/. assets/
+
+      - name: Internet permission and app name
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' $M
+          sed -i 's|android:label="[^"]*"|android:label="MySchool"|' $M
+
+      - name: Set up release signing
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KS" ] || [ -z "$KS_PASS" ] || [ -z "$KEY_PASS" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::error::Missing signing secrets. See docs/launch-checklist.md, step 2."
+            exit 1
+          fi
+          echo "$KS" | base64 -d > android/upload-keystore.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../upload-keystore.jks\n' "$KS_PASS" "$KEY_PASS" "$KEY_ALIAS" > android/key.properties
+          python3 tool/apply_signing.py
+
+      - run: flutter pub get
+      - name: App icon
+        run: dart run flutter_launcher_icons
+
+      - name: Build signed app bundle and APK
+        run: |
+          flutter build appbundle --release --build-number=${{ github.run_number }}
+          flutter build apk --release --build-number=${{ github.run_number }}
+
+      - name: Show who signed the bundle (must NOT say "Android Debug")
+        run: keytool -printcert -jarfile build/app/outputs/bundle/release/app-release.aab | head -8
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: myschool-release
+          path: |
+            app/build/app/outputs/bundle/release/app-release.aab
+            app/build/app/outputs/flutter-apk/app-release.apk

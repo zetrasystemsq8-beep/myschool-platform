@@ -15,4 +15,10 @@ class AppConfig {
   /// All MySchool tables/RPCs live in this Postgres schema.
   static const schema = 'myschool';
   static const logoBucket = 'myschool-logos';
+
+  /// Shown in the Privacy screen. Replace with your real details before publishing
+  /// (the launch checklist has a one-line command for this).
+  static const supportEmail = 'YOUR-EMAIL@example.com';
+  static const policyUrl = 'https://YOUR-GITHUB-NAME.github.io/myschool-platform/privacy.html';
+  static const termsUrl = 'https://YOUR-GITHUB-NAME.github.io/myschool-platform/terms.html';
 }

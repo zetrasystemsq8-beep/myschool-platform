@@ -10,6 +10,7 @@ import '../widgets/app_card.dart';
 import '../widgets/feedback.dart';
 import '../widgets/form_sheet.dart';
 import '../widgets/school_avatar.dart';
+import 'legal_screen.dart';
 import 'school_home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -214,7 +215,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 : 'Check results under Approvals, and manage the school under My school.'),
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LegalScreen())),
+          icon: const Icon(Icons.privacy_tip_outlined),
+          label: const Text('Privacy, terms and deleting my data'),
+        ),
+        const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: _signOut,
           icon: const Icon(Icons.logout),
