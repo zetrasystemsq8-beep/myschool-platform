@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
 import 'data/app_settings.dart';
+import 'data/push_service.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -19,6 +20,7 @@ void main() {
       anonKey: AppConfig.supabaseAnonKey,
     );
     await AppSettings.load();
+    await PushService.instance.initialize();
     runApp(const MySchoolApp());
   }, (error, stack) => debugPrint('Unhandled error: $error'));
 }

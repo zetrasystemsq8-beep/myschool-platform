@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/app_settings.dart';
+import '../data/push_service.dart';
 import '../data/auth_repository.dart';
 import '../data/models.dart';
 import '../data/portal_repository.dart';
@@ -88,6 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _signOut() async {
+    await PushService.instance.unregister();
     await AuthRepository.instance.signOut();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(

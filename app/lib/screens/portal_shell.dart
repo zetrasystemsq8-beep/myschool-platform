@@ -19,6 +19,7 @@ import 'attendance_screen.dart';
 import 'attendance_view_screen.dart';
 import 'fees_screen.dart';
 import '../data/notification_repository.dart';
+import '../data/push_service.dart';
 import 'home_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
@@ -70,10 +71,32 @@ class _PortalShellState extends State<PortalShell> {
     }
   }
 
+  void Function(String)? _openScreen;
+
+  void _onPushOpen() {
+    final target = PushService.instance.openTarget.value;
+    if (target == null) return;
+    PushService.instance.openTarget.value = null;
+    _openScreen?.call(target);
+  }
+
+  void _onPushIncoming() => _refreshUnread();
+
   @override
   void initState() {
     super.initState();
     _load();
+    PushService.instance.register();
+    PushService.instance.openTarget.addListener(_onPushOpen);
+    PushService.instance.incoming.addListener(_onPushIncoming);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onPushOpen());
+  }
+
+  @override
+  void dispose() {
+    PushService.instance.openTarget.removeListener(_onPushOpen);
+    PushService.instance.incoming.removeListener(_onPushIncoming);
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -184,6 +207,8 @@ class _PortalShellState extends State<PortalShell> {
         openExtra(id);
       }
     }
+
+    _openScreen = goTo;
 
     final moreItems = <MoreItem>[
       MoreItem(
