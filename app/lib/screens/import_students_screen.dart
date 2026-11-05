@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -70,17 +69,6 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
   void dispose() {
     _text.dispose();
     super.dispose();
-  }
-
-  Future<void> _chooseFile() async {
-    try {
-      final res = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['csv', 'txt'], withData: true);
-      final bytes = res?.files.single.bytes;
-      if (bytes == null) return;
-      setState(() => _text.text = utf8.decode(bytes, allowMalformed: true));
-    } catch (e) {
-      if (mounted) notify(context, 'Could not open that file. Try pasting the text instead.', error: true);
-    }
   }
 
   String _norm(String s) => s.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
@@ -320,7 +308,7 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
               title: 'Import students',
               steps: [
                 'In Excel or Google Sheets, make a table with the columns shown on this screen and save it as CSV.',
-                'Choose the file here, or paste the text. Then tap "Check the list".',
+                'Open the CSV file, select all the text, copy it, and paste it here. Then tap "Check the list".',
                 'Fix any problems shown, then tap "Import". Students are put in their class for the current school year.',
                 'At the end you get a printable list with each PIN and parent password. Hand them out privately.',
               ],
@@ -341,28 +329,20 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
               'Optional: other_names, pin, parent_name, parent_email. A missing PIN is generated for you.',
         ),
         const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-            child: OutlinedButton.icon(onPressed: _chooseFile, icon: const Icon(Icons.upload_file), label: const Text('Choose CSV file')),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () async {
-                await Clipboard.setData(const ClipboardData(text: _example));
-                if (mounted) notify(context, 'Example copied. Paste it into a spreadsheet to see the layout.');
-              },
-              icon: const Icon(Icons.copy),
-              label: const Text('Copy example'),
-            ),
-          ),
-        ]),
+        OutlinedButton.icon(
+          onPressed: () async {
+            await Clipboard.setData(const ClipboardData(text: _example));
+            if (mounted) notify(context, 'Example copied. Paste it into a spreadsheet to see the layout.');
+          },
+          icon: const Icon(Icons.copy),
+          label: const Text('Copy example'),
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: _text,
           minLines: 8,
           maxLines: 14,
-          decoration: const InputDecoration(labelText: 'Or paste the list here', alignLabelWithHint: true),
+          decoration: const InputDecoration(labelText: 'Paste the list here', alignLabelWithHint: true),
         ),
         if (_headerError != null) ...[
           const SizedBox(height: 12),
