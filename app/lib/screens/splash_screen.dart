@@ -61,6 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
         illustration: true,
         padding: EdgeInsets.zero,
         child: SizedBox(
+          width: double.infinity,
           height: h,
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(
